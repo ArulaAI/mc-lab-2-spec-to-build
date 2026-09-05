@@ -1,0 +1,8 @@
+{
+  "description": "Baseline hashes for write-protected authority documents. The write gate blocks edits; this is the second line, in case the gate is bypassed or disabled.",
+  "files": {
+    "specs/OUT_OF_SCOPE.md": "040b6708b3a2d47a21b3f6cb38af37d99a7606412c98fc12cd5d43a21552cbee",
+    "specs/NON_NEGOTIABLES.md": "59a143ed2e9895756fdd59d48381a31ba65f33dd75c906c82e6361716ec5c3b2",
+    "docs/ESSENTIAL_OUTCOMES.md": "9bb761432dca44d98f507829a11cce1e7e4da9459b061084a27376ea37e3a575"
+  }
+}

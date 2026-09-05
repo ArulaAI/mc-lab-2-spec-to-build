@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: Payment Processor - represented refund API
+  description: >
+    The refund surface represented in Lab 2. Covers only the TTA to Payment Processor seam.
+    CPC, injection, LCS, DCF and settlement are downstream and are not represented here.
+    Contract version numbering is a lab fixture.
+  version: "1"
+paths:
+  /card-payments/{cardPaymentGatewayId}/refunds:
+    post:
+      summary: Refund against an order and its original payment transaction
+      operationId: refundPayment
+      parameters:
+        - $ref: '#/components/parameters/CardPaymentGatewayId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProcessorRefundRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/Processed' }
+        '400': { $ref: '#/components/responses/ValidationFailure' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '500': { $ref: '#/components/responses/SystemError' }
+
+
+components:
+  parameters:
+    CardPaymentGatewayId:
+      name: cardPaymentGatewayId
+      in: path
+      required: true
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: >
+        Retry identity supplied by the caller and used unchanged. Derivation is not defined by
+        this contract. Lab representation - the source states the duplicate rule and the 409
+        status but does not name a transport field.
+      schema: { type: string }
+
+  responses:
+    Processed:
+      description: Processed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ProcessorRefundResponse' }
+    ValidationFailure:
+      description: Validation failure
+    IdempotencyConflict:
+      description: A refund already exists for this idempotency identity
+    SystemError:
+      description: System error
+
+  schemas:
+    ProcessorRefundRequest:
+      type: object
+      required: [merchantWsApiId, wsApiSupport, amounts, paymentCurrency]
+      properties:
+        merchantWsApiId: { type: string }
+        wsApiSupport: { $ref: '#/components/schemas/WsApiSupport' }
+        amounts: { $ref: '#/components/schemas/Amounts' }
+        paymentCurrency: { type: string }
+        merchantOrder: { $ref: '#/components/schemas/MerchantOrder' }
+
+    WsApiSupport:
+      type: object
+      required: [transactionWsApiId, orderWsApiId]
+      properties:
+        transactionWsApiId: { type: string }
+        orderWsApiId: { type: string }
+        wsApiVersion: { type: string }
+        targetTransactionWsApiId:
+          type: string
+          description: Present for the capture-target case.
+
+    Amounts:
+      type: object
+      required: [transactionAmount]
+      properties:
+        transactionAmount: { type: number }
+
+    MerchantOrder:
+      type: object
+      properties:
+        transactionReference: { type: string }
+
+    ProcessorRefundResponse:
+      type: object
+      properties:
+        order: { $ref: '#/components/schemas/ResponseOrder' }
+        transaction: { $ref: '#/components/schemas/ResponseTransaction' }
+
+    ResponseOrder:
+      type: object
+      properties:
+        totalCapturedAmount: { type: number }
+        totalRefundedAmount: { type: number }
+        status: { type: string, enum: [REFUNDED, PARTIALLY_REFUNDED] }
+
+    ResponseTransaction:
+      type: object
+      properties:
+        authorizationResponse: { $ref: '#/components/schemas/AuthorizationResponse' }
+
+    AuthorizationResponse:
+      type: object
+      properties:
+        responseCode: { type: string }
+        approvalCode: { type: string }

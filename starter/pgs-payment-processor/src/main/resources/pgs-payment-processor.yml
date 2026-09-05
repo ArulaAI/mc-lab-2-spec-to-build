@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: pgs-payment-processor
+
+server:
+  port: ${PROCESSOR_PORT:8081}
+
+# Lab fixture. ORD-1 represents an order with two captures: CT-1 for 100.00 and CT-9 for 50.00,
+# so the total captured amount is 150.00. Only this service holds that state, which is why both
+# the order-level and the per-capture refund determinations are authoritative here.
+lab:
+  refund:
+    orders:
+      - order-id: ORD-1
+        currency: USD
+        total-captured-amount: 150.00
+        captures:
+          - capture-transaction-id: CT-1
+            amount: 100.00
+          - capture-transaction-id: CT-9
+            amount: 50.00
+      - order-id: ORD-SMALL
+        currency: USD
+        total-captured-amount: 10.00
+        captures:
+          - capture-transaction-id: CT-S
+            amount: 10.00

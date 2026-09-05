@@ -1,0 +1,11 @@
+{
+  "_comment": "Paths that are authority for this lab rather than participant workspace. Reading them is expected; writing to them is blocked. A lab whose harness can be edited by the thing being graded is not measuring anything.",
+  "deny": [
+    "lab-harness/**",
+    "specs/OUT_OF_SCOPE.md",
+    "specs/NON_NEGOTIABLES.md",
+    "docs/ESSENTIAL_OUTCOMES.md",
+    "facilitator/**",
+    "starter/**"
+  ]
+}

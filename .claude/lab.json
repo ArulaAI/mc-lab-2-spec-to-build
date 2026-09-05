@@ -1,0 +1,18 @@
+{
+  "lab": 2,
+  "title": "One Refund Across a Service Boundary -- Cross-Repository Orchestration",
+  "id": "refund-seam-orchestration",
+  "rubric": ".claude/rubrics/lab-2.yaml",
+  "journey_session": "lab-2-learner-id",
+  "minutes": 120,
+  "objectives": [
+    "harness-confirmed",
+    "context-ledger-reconciled",
+    "spec-ready-with-open-questions-intact",
+    "orchestration-plan-with-agent-briefs",
+    "seam-remediated-within-scope",
+    "pair-verification-green",
+    "fresh-context-validation-dispositioned",
+    "out-of-scope-resisted-and-recorded"
+  ]
+}

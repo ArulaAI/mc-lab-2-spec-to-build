@@ -1,0 +1,18 @@
+# Working copies of the two service repositories. Created by scripts/verify_setup.py from
+# starter/, each as its own Git repository. They are deliberately not tracked here: nesting one
+# repository's history inside another's is how solution history leaks.
+/pgs-tta/
+/pgs-payment-processor/
+
+# Facilitator package. Never part of the participant distribution -- keeping it untracked means it
+# cannot leak into participant history by accident rather than by discipline.
+/facilitator/
+
+# Build output and session artifacts
+target/
+.claude/journey/
+journey/
+*.class
+
+# macOS
+.DS_Store

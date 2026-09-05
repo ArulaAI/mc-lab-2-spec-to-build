@@ -1,0 +1,10 @@
+# This service's real configuration lives in pgs-payment-processor.yml, named after the service.
+#
+# Why the indirection: the pair-verification harness runs both services in one JVM, and two
+# application.yml files at the classpath root do not merge - one wins silently and the other
+# service starts with its neighbour's configuration. The harness therefore pins
+# spring.config.name per service and never loads this file. Standalone runs and this service's
+# own tests load this file, which imports the real one.
+spring:
+  config:
+    import: "classpath:pgs-payment-processor.yml"

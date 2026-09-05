@@ -1,0 +1,118 @@
+# Lab 2 rubric -- One Refund Across a Service Boundary
+#
+# Graded on engineering outcomes and evidence. Never on model wording, ordering or formatting:
+# two participants who reach the same conclusion by different routes score identically.
+#
+# A documented limit, stated rather than papered over: a journey event records that a tool ran,
+# not what it returned. So no check here can prove a build went green from the journey alone.
+# Build outcomes are graded from recorded results and repository state instead, and the
+# facilitator's live spot-check covers the rest.
+
+lab: 2
+title: "One Refund Across a Service Boundary"
+pass_threshold: 70
+
+criteria:
+  # ---------------------------------------------------------------- harness and grounding (10)
+  - id: harness-journey
+    description: "A real journey trail exists for the session"
+    max_score: 5
+    check: "event_count_gte:5"
+
+  - id: harness-handoffs
+    description: "Stage hand-offs were written, not skipped"
+    max_score: 5
+    check: "file_sections_nonempty:docs/workflow-tracker.md:3"
+
+  # ------------------------------------------------------------------------ context audit (20)
+  - id: ledger-substance
+    description: "The context ledger carries real reconciled rows"
+    max_score: 6
+    check: "file_table_rows_gte:docs/context-ledger.md:6"
+
+  - id: ledger-contract-drift
+    description: "The contract-version drift is identified, with evidence and a ruling"
+    max_score: 5
+    check: "file_table_row_contains_all:docs/context-ledger.md:contract"
+
+  - id: ledger-divergent-rule
+    description: "The divergent business rule is identified, with evidence and a ruling"
+    max_score: 5
+    check: "file_table_row_contains_all:docs/context-ledger.md:refund"
+
+  - id: ledger-unknown-retained
+    description: "At least one question is left UNKNOWN rather than invented"
+    max_score: 4
+    # A well-formed row rather than the bare word: an unknown that was genuinely reasoned about
+    # carries a claim, evidence and a ruling alongside it. The word on its own proves nothing.
+    check: "file_table_row_contains_all:docs/context-ledger.md:unknown"
+
+  # -------------------------------------------------------------------------- specification (20)
+  - id: spec-ready
+    description: "The specification passes the structural readiness gate"
+    max_score: 8
+    check: "json_true:specs/spec.status.json:valid"
+
+  - id: spec-open-question-intact
+    description: "The unresolved derivation question is still recorded as open, not answered"
+    max_score: 6
+    check: "file_contains:specs/refund-seam-phase1.spec.md:OQ-1"
+
+  - id: spec-scope-preserved
+    description: "The out-of-scope document is byte-for-byte unmodified"
+    max_score: 3
+    check: "unmodified:specs/OUT_OF_SCOPE.md"
+
+  - id: spec-non-negotiables-referenced
+    description: "The specification defers to the non-negotiables"
+    max_score: 3
+    check: "file_contains:specs/refund-seam-phase1.spec.md:NON_NEGOTIABLES.md"
+
+  # --------------------------------------------------------------------- orchestration plan (15)
+  - id: plan-ready
+    description: "The orchestration plan passes the structural gate"
+    max_score: 7
+    check: "json_true:docs/plans/plan.status.json:valid"
+
+  - id: plan-agent-briefs
+    description: "Both implementation briefs exist and bound their agent"
+    max_score: 8
+    check: "all_of:file_contains:docs/agent-briefs/tta-implementation-brief.md:Stop;file_contains:docs/agent-briefs/processor-implementation-brief.md:Stop"
+
+  # ------------------------------------------------------------------------------- build (20)
+  - id: build-void-resisted
+    description: "Out-of-scope Void code is untouched -- the correct action was no diff"
+    max_score: 8
+    check: "seed_intact:seed-07-void-adjacency"
+
+  - id: build-pair-green
+    description: "Pair verification was run and recorded green"
+    max_score: 7
+    check: "file_contains:docs/pair-result.txt:GREEN"
+
+  - id: build-work-committed
+    description: "Implementation work exists in both service repositories"
+    max_score: 5
+    check: "all_of:repo_changed:pgs-tta;repo_changed:pgs-payment-processor"
+
+  # ----------------------------------------------------------------- independent validation (10)
+  - id: validation-brief-generated
+    description: "The validator brief was assembled deterministically"
+    max_score: 3
+    check: "file_contains:docs/validator-brief.md:Validator brief"
+
+  - id: validation-report-received
+    description: "A fresh-context validator report exists with a verdict"
+    max_score: 3
+    check: "file_contains:docs/validator-report.md:Verdict"
+
+  - id: validation-dispositioned
+    description: "Every finding received a human disposition and rationale"
+    max_score: 4
+    check: "file_table_rows_gte:docs/finding-dispositions.md:2"
+
+  # ---------------------------------------------------------------------------- transfer (5)
+  - id: transfer-practice-recorded
+    description: "A reusable multi-repository practice was recorded for next time"
+    max_score: 5
+    check: "file_sections_nonempty:docs/workflow-tracker.md:6"

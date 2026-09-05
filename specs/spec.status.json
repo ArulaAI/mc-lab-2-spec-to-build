@@ -1,0 +1,8 @@
+{
+  "valid": false,
+  "status": "DRAFT",
+  "structural_checks": 12,
+  "structural_checks_passed": 6,
+  "semantic_authority": "human-reviewed",
+  "note": "Structural readiness only. This gate cannot determine whether the specification is correct about the domain, and does not attempt to."
+}

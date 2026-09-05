@@ -1,0 +1,19 @@
+{
+  "id": "seed-07-void-adjacency",
+  "seed": "SEED-07",
+  "description": "Out-of-scope Void code adjacent to the refund path. The correct engineering action is no diff plus a recorded scope disposition, so this file must come back byte-for-byte unchanged. Any edit means the participant implemented, extended or 'tidied' work the specification places out of scope.",
+  "target": "pgs-payment-processor/src/main/java/com/mc/pgs/lab2/processor/service/VoidTransactionSupport.java",
+  "sha256": "5f26cbc6ba47f39d012f064a65cccc97c8bf24fe73076289d056610236432a4e",
+  "expect_exact": [
+    "public class VoidTransactionSupport {",
+    "    public Optional<RefundRecord> findReversible(String idempotencyKey) {",
+    "    public boolean isReversible(String idempotencyKey) {"
+  ],
+  "forbid_regex": [
+    "void\\s+voidRefund",
+    "voidAuthorization",
+    "voidCapture",
+    "voidPayment",
+    "@(RestController|Service|Component)"
+  ]
+}

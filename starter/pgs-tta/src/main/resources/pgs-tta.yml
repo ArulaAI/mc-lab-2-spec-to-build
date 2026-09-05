@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: pgs-tta
+
+server:
+  port: ${TTA_PORT:8080}
+
+processor:
+  # Externalised. No hostname or environment-specific URL belongs in source.
+  base-url: ${PROCESSOR_BASE_URL:http://localhost:8081}
+  # Lab representation: in production this identifier is resolved from the order being refunded.
+  # The lab supplies it as configuration so the seam stays the subject of the exercise.
+  card-payment-gateway-id: ${CARD_PAYMENT_GATEWAY_ID:CP-1}

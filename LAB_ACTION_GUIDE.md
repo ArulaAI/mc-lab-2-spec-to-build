@@ -1,293 +1,557 @@
-# Lab 2 — One Refund Across a Service Boundary
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   L A B   2                                                                ║
+║                                                                            ║
+║   ONE REFUND ACROSS A SERVICE BOUNDARY                                     ║
+║   ─────────────────────────────────────                                    ║
+║                                                                            ║
+║   Two repositories. Both green. They still disagree.                       ║
+║                                                                            ║
+║   120 minutes · 7 stages · 2 services · 1 seam                             ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
 
-**120 minutes.** Roughly 114 minutes of committed activity, ~6 minutes of float.
+---
+
+## The 90-second version
+
+A merchant took a payment. Now they want it refunded.
+
+That refund crosses a boundary: **TTA** translates it, **Payment Processor** decides it. Two
+services, two repositories, two teams, two release cadences.
+
+Here is the situation you are walking into:
+
+```
+       pgs-tta                              pgs-payment-processor
+   ┌───────────────┐                        ┌───────────────┐
+   │  mvn verify   │                        │  mvn verify   │
+   │               │                        │               │
+   │   ✓  GREEN    │                        │   ✓  GREEN    │
+   └───────┬───────┘                        └───────┬───────┘
+           │                                        │
+           └──────────────►  ?????  ◄───────────────┘
+                        the two do not agree
+```
+
+Nobody's tests are failing. Nobody's build is red. No linter is complaining. And the refund
+still does the wrong thing, because **correctness across a service boundary does not live inside
+either service** — it lives in the relationship between them, and neither repository can see it.
+
+> ### The one line to take away
+> **Repo A green + Repo B green ≠ pair correct.**
 
 Lab 1 taught you to govern one AI-assisted change inside one repository. This lab is about what
-happens when the change spans two, and the decisions that matter live in the space between them.
+happens when the change spans two, and the decisions that actually matter live in the space
+between them — where no single agent, and no single test suite, is looking.
 
-Before you start, confirm `python3 scripts/verify_setup.py` ended with **"Setup complete"**.
+---
+
+## Your job, stated plainly
+
+You are not here to fix bugs. You are here to **establish what is true across a boundary where
+neither witness can see the whole picture** — and then to direct AI safely inside that picture.
+
+By minute 120 you will have:
+
+```
+  ▸ audited both repositories with scoped agents that cannot see each other
+  ▸ reconciled their conflicting claims yourself, with evidence
+  ▸ turned a vague specification into one you can build from
+  ▸ written the contracts that bound what each agent may do
+  ▸ let AI implement only inside those bounds
+  ▸ proved the pair with evidence a fresh context produced
+```
+
+---
+
+## The map
+
+The whole lab on one screen. Each stage teaches one agentic-engineering concept, and each hands
+the next stage something concrete.
+
+```
+ STAGE                              CONCEPT                            YOU LEAVE WITH
+ ────────────────────────────────────────────────────────────────────────────────────────
+  0  Ground the Work                context boundary & authority       a sealed prediction
+        │
+  1  Audit Context                  scoped agents, parallel            the context ledger
+        │                           delegation
+  2  Author & Validate the Spec     spec-as-context, readiness gates   a buildable spec
+        │
+       ⏸  Q&A
+        │
+  3  Plan Across Repositories       orchestration & context            plan + 2 agent briefs
+        │                           isolation
+  4  Build & Validate               bounded execution, deterministic   a remediated seam
+        │                           guardrails
+  5  Validate with Fresh Context    independent judgment               evidence you didn't write
+        │
+       ⏸  Q&A
+        │
+  6  Review, Handoff & Close        context handoff, learning loop     a practice worth reusing
+```
+
+### Where the time goes
+
+```
+  S0  ██████                             10 min   Ground the Work
+  S1  ███████████                        18 min   Audit Context
+  S2  ███████████                        18 min   Author & Validate the Spec
+  Q&A ██                                  3 min   ⏸
+  S3  ████████                           14 min   Plan Across Repositories
+  S4  █████████████████                  28 min   Build & Validate
+  S5  ████████████                       20 min   Validate with Fresh Context
+  Q&A ██                                  3 min   ⏸
+  S6  ███                                 5 min   Review, Handoff & Close
+      ─────────────────────────────────────────
+                                        119 min   at the low end of every stage
+```
+
+Stages carry ranges (Stage 1 is 18–20, Stage 4 is 28–30). Those ranges are where the facilitator
+**trades** time between stages — not where extra time comes from. Something always runs long.
+When it does, the trade comes out of Stage 4, never Stage 5.
 
 ---
 
 ## How to read this guide
 
-Each stage says what you are doing and why, and shows **one** worked example. It does not give you
-a prompt to paste. That is deliberate: you will not have this guide at your desk next month, and a
-prompt you copied teaches you nothing about how to write the next one.
+This guide shows you **one** worked example per technique and then asks you to write the next one
+yourself. It deliberately does not hand you prompts to paste. You will not have this document at
+your desk next month, and a prompt you copied teaches you nothing about how to write the one you
+will actually need.
 
-Where you see **▶ Your turn**, you write the next one yourself. Where you see **◆ Predict**, write
-your answer down before you find out — including when you turn out to be wrong, which is the part
-that sticks.
+### The markers
 
-Your agent's wording will differ from your neighbour's. That is expected. See
-[`docs/ESSENTIAL_OUTCOMES.md`](docs/ESSENTIAL_OUTCOMES.md).
+```
+  ◆ Predict     Write your answer down BEFORE you find out. Including — especially —
+                when you turn out to be wrong. That is the part that sticks.
 
----
+  ▶ Your turn   The facilitator demonstrated one. You write the next one.
 
-# Stage 0 — Ground the Work · *Frame the Boundary* · ~10 min
+  ⚠ Trap        A place rooms reliably lose time or reach for the wrong instinct.
 
-**Concept: context boundary and authority.** Before an agent acts, decide what it may see and which
-document wins when two disagree.
+  ⏸ Q&A pause   Scheduled, so questions land somewhere instead of derailing the room.
 
-1. **Start the lab.**
-   ```
-   /lab
-   ```
-   Confirm a journey event actually landed in `.claude/journey/` — not just that the command
-   returned. A silent journey failure surfaces at Stage 6 otherwise, when it is too late to fix.
+  ⌘ Run         A command to actually execute.
+```
 
-2. **Read the boundary.** Open [`docs/SCENARIO_GROUNDING.md`](docs/SCENARIO_GROUNDING.md). You are
-   working on the TTA → Payment Processor seam only. CPC, injection, LCS, DCF and settlement are
-   outside the runtime.
+### Before anything else
 
-3. **Read the outcomes card.** [`docs/ESSENTIAL_OUTCOMES.md`](docs/ESSENTIAL_OUTCOMES.md). Eight
-   outcomes, and two of them are things you *refuse* to do.
+> **Your agent's output will not match your neighbour's.** Different wording, different ordering,
+> the same problem found by a different route. Running the same prompt twice will not give you
+> the same text either.
+>
+> None of that means you are behind. If you catch yourself trying to make your output *look like*
+> the demonstration, stop and ask what the demonstration was actually showing you.
+>
+> See [`docs/ESSENTIAL_OUTCOMES.md`](docs/ESSENTIAL_OUTCOMES.md) — we grade what you concluded and
+> what you can show for it, never whether your screen matches anyone else's.
 
-4. **Note the authority order.** `NON_NEGOTIABLES.md` → `OUT_OF_SCOPE.md` → `PGS_DECISIONS.md` →
-   the specification. Higher wins. The first three are write-protected; if you try to edit them the
-   write gate will stop you, which is the point.
+### Preflight
 
-5. **◆ Predict #1 — seal this before you look at any code.**
+```bash
+python3 scripts/verify_setup.py
+```
 
-   > Two repositories must end up agreeing. **Which side should change first, and why?**
-
-   Write it in your notes with your reasoning. You will reopen it twice. Do not go looking for the
-   answer now — a prediction you have already researched teaches you nothing.
-
-6. **Close the stage.**
-   ```
-   /hand-off
-   ```
+Must end with **"Setup complete"**. If it does not, flag it now — not at minute forty.
 
 ---
 
-# Stage 1 — Audit Context · *Map the Seam* · ~18–20 min
+```
+┌──────────────────────────────────────────────────────────────── 10 min ──┐
+│  STAGE 0  ·  GROUND THE WORK                                             │
+│  Frame the Boundary                                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
-**Concept: scoped sub-agents and parallel delegation.** Agents reason locally. You reconcile
-globally.
+**Concept** — context boundary and authority
+**You leave with** — a sealed prediction, and knowing which document wins an argument
 
-You could hand one agent both repositories. Don't. An agent given everything spends its attention
-on framework detail, reasons deeply about one side and shallowly about the other, and fills the
-space between them with plausible invention. You will not be able to tell which parts it verified.
+Before an agent does anything, two questions have to be settled: what is it allowed to see, and
+when two documents disagree, which one wins? Skip these and every later decision inherits the
+ambiguity.
 
-Instead: one agent per repository, read-only, each returning the same structured shape — so the
-returns can be laid side by side and the disagreements become visible.
+### 1 · Start the lab
 
-The `repo-auditor` agent is already defined for you at `.claude/agents/repo-auditor.md`. **The
-capability is standardised. The brief is yours to write.**
+```
+⌘  /lab
+```
+
+Then confirm a journey event actually landed in `.claude/journey/` — not merely that the command
+returned. A silent journey failure surfaces at Stage 6, which is far too late to fix it.
+
+### 2 · Read the boundary
+
+Open [`docs/SCENARIO_GROUNDING.md`](docs/SCENARIO_GROUNDING.md).
+
+```
+   WSAPI ─► TTA ─► Payment Processor ─► CPC ─► Injection ─► LCS ─► DCF
+            └──────────┬─────────────┘  └──────────┬──────────────────┘
+              you work here              not implemented in this lab
+```
+
+That document also separates three things you must keep apart all session: what is **grounded PGS
+behaviour**, what is **lab simplification**, and what is a **deliberately planted defect**. The
+planted ones are teaching fixtures. They do not imply anything about real Mastercard systems.
+
+### 3 · Note the authority order
+
+```
+   specs/NON_NEGOTIABLES.md     ◄── highest. Holds regardless of anything else.
+   specs/OUT_OF_SCOPE.md        ◄── what must not be built
+   docs/PGS_DECISIONS.md        ◄── fact vs. lab representation vs. not modelled
+   specs/refund-seam-phase1.spec.md   ◄── what to build, once it is READY
+```
+
+Higher wins. The top three are **write-protected** — try to edit one and the write gate stops you.
+That is deliberate: a lab whose rules can be edited by the thing being graded is not measuring
+anything.
+
+### 4 · ◆ Predict #1 — seal this now
+
+> Two repositories have to end up agreeing.
+> **Which side should change first, and why?**
+
+Write it in your notes, with your reasoning, before you look at a single line of code.
+
+You will reopen this twice — once when you understand the seam, and once when you have hard
+evidence. Do not go researching it now. A prediction you have already looked up teaches you
+nothing.
+
+### 5 · Close the stage
+
+```
+⌘  /hand-off
+```
+
+---
+
+```
+┌───────────────────────────────────────────────────────────── 18–20 min ──┐
+│  STAGE 1  ·  AUDIT CONTEXT                                               │
+│  Map the Seam                                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+**Concept** — scoped sub-agents and parallel delegation
+**You leave with** — a context ledger you reconciled yourself
+
+> **Agents reason locally. You reconcile globally.**
+
+### Why not just hand one agent both repositories?
+
+You could. Someone in the room will. Here is what happens:
+
+```
+   ONE AGENT, BOTH REPOS              TWO AGENTS, ONE REPO EACH
+   ─────────────────────              ─────────────────────────
+   spends attention on                each finding is local
+   framework detail                   and checkable
+
+   reasons deeply about one           neither can guess across
+   side, shallowly about the          the boundary — so it says
+   other                              so instead
+
+   fills the gap between them         the gaps stay visible,
+   with plausible invention           and YOU close them
+
+   you cannot tell which parts        the disagreements show up
+   it actually verified               as disagreements
+```
+
+The second shape is not more work. It is the only shape where the seam becomes visible, because
+a disagreement can only appear when two independent accounts are laid side by side.
 
 ### ◆ Predict #2
 
-> The first agent will audit one repository and report confidently. **What will it be unable to
-> know, that only the other repository can tell you?** Name two things before you dispatch it.
+> The first agent will audit its repository and report with total confidence.
+> **Name two things it cannot possibly know** — things only the *other* repository can tell you.
 
-### The facilitator demonstrates: briefing the first auditor
+Write them down before you dispatch it.
 
-Watch what the brief actually pins down, and what it deliberately refuses:
+### The facilitator demonstrates — briefing the first auditor
 
-- which repository, and that it may read nothing else
-- what to inspect: entry points, contract artifacts and their versions, outbound calls, business
-  rules, boundary validations, error mappings, idempotency behaviour, correlation behaviour, tests
-- that every claim cites a file and, where it applies, a line
-- that anything requiring the other repository goes under **Unknowns**, not under a guess
-- that it must report what the source material requires and the repository does *not* do — absence
-  from code is not absence from authority
-- the exact return headings, so two returns can be compared rather than read
-
-### ▶ Your turn: brief the second auditor
-
-Write the brief for the other repository yourself. Same return shape — that is what makes the
-returns comparable — but the things worth inspecting are not identical on both sides of a seam.
-One side translates and calls; the other decides and records.
-
-Both auditors may run at the same time. They only read, so there is nothing to serialise.
-
-### Then: reconcile, in [`docs/context-ledger.md`](docs/context-ledger.md)
-
-| Claim | Asserted in | Evidence | Contradicted by | Human ruling | Status |
-
-This is the stage's real work, and it is yours rather than the agents'. Every row gets a ruling.
-
-Three things worth being deliberate about:
-
-- **A claim is what a repository believes about the world beyond itself.** Those are the rows that
-  matter: a claim can be entirely true locally and false at the seam.
-- **`UNKNOWN` is a finish state.** If neither repository can settle something, it stays `UNKNOWN`.
-  Do not resolve it because an empty cell looks unfinished.
-- **When the two disagree, you rule.** Not the agent that sounded more certain.
-
-**Reveal:** compare the ledger against your Prediction #2. What could the first agent not have
-known?
+The `repo-auditor` agent already exists at `.claude/agents/repo-auditor.md`. **The capability is
+standardised; the brief is yours.** Watch what the brief pins down:
 
 ```
-/hand-off
+   ▸ which repository — and that it may read nothing else
+   ▸ what to inspect: entry points, contract artifacts and versions, outbound
+     calls, business rules, boundary validations, error mappings, idempotency,
+     correlation, tests
+   ▸ that every claim cites a file, and a line where one applies
+   ▸ that anything needing the other repository goes under UNKNOWNS, not a guess
+   ▸ that it must report what the source requires and the repo does NOT do —
+     absence from code is not absence from authority
+   ▸ the exact return headings, so two returns can be COMPARED, not just read
+```
+
+That last one is quietly the most important. Identical structure is what turns two reports into
+one comparison.
+
+### ▶ Your turn — brief the second auditor
+
+Write the brief for the other repository yourself.
+
+Same return shape — that is what makes them comparable. But the things worth inspecting are not
+identical on both sides of a seam: one side **translates and calls**, the other **decides and
+records**. A brief that treats them as mirror images will miss what is specific to each.
+
+Both auditors can run at once. They only read, so there is nothing to serialise.
+
+### Then the real work — reconcile
+
+In [`docs/context-ledger.md`](docs/context-ledger.md):
+
+```
+  │ Claim │ Asserted in │ Evidence │ Contradicted by │ Your ruling │ Status │
+```
+
+This part is yours, not the agents'. Three things to be deliberate about:
+
+**A claim is what a repository believes about the world beyond itself.** Those are the rows that
+matter. A claim can be entirely true locally and false at the seam — that is precisely the failure
+mode you are hunting.
+
+**`UNKNOWN` is a finish state.** If neither repository can settle something, it stays `UNKNOWN`.
+Do not resolve it because an empty cell looks unfinished.
+
+**When the two disagree, you rule.** Not the agent that sounded more certain. Confidence is not
+evidence, and an agent has no way to signal the difference.
+
+> ⚠ **Trap** — the tempting move here is to accept whichever account is more detailed. Detail is
+> a property of how much the agent had to say, not of how much it verified.
+
+**Reveal:** compare your ledger against Prediction #2. What could the first agent not have known?
+
+```
+⌘  /hand-off
 ```
 
 ---
 
-# Stage 2 — Author & Validate the Spec · *Make the Spec Buildable* · ~18–20 min
-
-**Concept: spec-as-context and readiness gates.** The validated specification becomes the bounded
-authority every agent builds from. Whatever is vague here becomes an invention later.
-
-Open [`specs/refund-seam-phase1.spec.md`](specs/refund-seam-phase1.spec.md) and run the gate:
-
-```bash
-python3 .claude/scripts/validate_spec.py
+```
+┌───────────────────────────────────────────────────────────── 18–20 min ──┐
+│  STAGE 2  ·  AUTHOR & VALIDATE THE SPEC                                  │
+│  Make the Spec Buildable                                                 │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
-It will refuse the specification and tell you which checks fail. The checks map to
+**Concept** — spec-as-context and readiness gates
+**You leave with** — a specification an agent can build from without guessing
+
+> **Whatever stays vague here becomes an invention later.** Not might. Does.
+
+The validated specification is the bounded authority every agent in Stage 4 will build from. It
+is the highest-leverage document in the lab, and right now it is not good enough.
+
+```
+⌘  python3 .claude/scripts/validate_spec.py
+```
+
+It will refuse the specification and name the failing checks. They map to the eight checks in
 [`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md).
 
-### The facilitator demonstrates: one weak requirement becoming testable
+### The facilitator demonstrates — one weak requirement becoming testable
 
-> **Weak:** "Handle duplicate refunds correctly."
+```
+   ✗  WEAK
+      "Handle duplicate refunds correctly."
+
+   ✓  BUILDABLE
+      "When Payment Processor identifies a duplicate logical refund, the TTA
+       boundary preserves the duplicate-conflict semantics, and the downstream
+       repository contains no second refund record."
+```
+
+Look at what actually changed. The second version names **who decides**, **what the caller
+observes**, and **what must be true of stored state afterwards**. Three things a test can check.
+
+The first names none of them. The word "correctly" was carrying the entire requirement, and
+"correctly" is exactly where an agent inserts its own judgement.
+
+### ▶ Your turn — harden the rest
+
+The specification carries several more weaknesses of the same shape. Work through them with your
+agent and re-run the gate until it reports **READY**.
+
+Three rules while you do:
+
+**1 · Do not close an open question by answering it.**
+
+`OQ-1` asks how the idempotency key is derived in production. The source material states the
+duplicate rule and the status code, and never states the derivation.
+
+> ⚠ **Trap — the strongest one in this lab.** Your agent will offer you a reasonable-sounding
+> derivation. It will look like diligence. In payments, an invented key derivation is a business
+> decision made by something with no authority to make it — and it will read as perfectly sensible
+> right up until it moves the wrong amount of money.
 >
-> **Buildable:** "When Payment Processor identifies a duplicate logical refund, the TTA boundary
-> preserves the duplicate-conflict semantics, and the downstream repository contains no second
-> refund record."
+> It stays open. Refusing to answer it is the single most important thing you do today.
 
-Notice what changed. The second version names who decides, what the caller observes, and what must
-be true of stored state afterwards — three things a test can check. The first names none of them,
-and "correctly" is doing all of the work.
+**2 · Do not weaken the out-of-scope list to make something fit.** It is write-protected, so the
+gate will stop you. The instinct is the thing worth noticing in yourself.
 
-### ▶ Your turn: harden the rest
+**3 · Everything you add traces to `docs/PGS_DECISIONS.md`** — as a PGS fact, or as an explicitly
+labelled lab representation. Nothing gets invented into existence.
 
-The specification carries several more weaknesses of the same kind. Work through them with your
-agent, then re-run the gate until it reports **READY**.
+### Human gate before you move on
 
-Three rules while you do it:
+Read your hardened specification once more and ask one question:
 
-1. **Do not close an open question by answering it.** `OQ-1` asks how the idempotency key is
-   derived in production. The source states the duplicate rule and the status code and never states
-   the derivation. It stays open. An agent will offer you a reasonable-sounding answer; that is the
-   single most important thing to refuse in this lab.
-2. **Do not weaken the out-of-scope list to make something fit.** It is write-protected, so the
-   gate will stop you, but the instinct is what to notice.
-3. **Everything you add traces to `PGS_DECISIONS.md`** — as a PGS fact, or as an explicitly
-   labelled lab representation.
+> **Did we invent any PGS behaviour to get here?**
 
-The gate is structural. It checks that the specification is well-formed, not that it is *right*.
-The status file says `"semantic_authority": "human-reviewed"` for exactly that reason.
+If yes, take it out and put the question back.
 
-**Human gate before you move on:** read your hardened specification once more and ask — did we
-invent any PGS behaviour to get here? If yes, take it out and put the question back.
+The gate is structural. It tells you the specification is well-formed, never that it is *right* —
+which is why the status file records `"semantic_authority": "human-reviewed"` rather than quietly
+implying a machine approved the content.
 
 ```
-/hand-off
+⌘  /hand-off
 ```
 
-### ⏸ Q&A pause — ~3 min
+### ⏸ Q&A pause — 3 min
 
-Questions about the domain, the spec or the gate. Deep environment problems go on the **parking
-lot** rather than into the room.
+Domain, spec, or gate questions. Environment problems go to the **parking lot** instead of into
+the room.
 
 ---
 
-# Stage 3 — Plan Across Repositories · *Design the Orchestration* · ~14–15 min
-
-**Concept: agent orchestration and context isolation.** Orchestration is not launching more agents.
-It is deciding who knows what, who does what, and who decides what.
-
-Produce three artifacts:
-
 ```
-docs/plans/orchestration-plan.md
-docs/agent-briefs/tta-implementation-brief.md
-docs/agent-briefs/processor-implementation-brief.md
+┌───────────────────────────────────────────────────────────── 14–15 min ──┐
+│  STAGE 3  ·  PLAN ACROSS REPOSITORIES                                    │
+│  Design the Orchestration                                                │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
-Each implementation brief states:
+**Concept** — agent orchestration and context isolation
+**You leave with** — an orchestration plan and two agent briefs
+
+> **Orchestration is not launching more agents.** It is deciding who knows what, who does what,
+> and who decides what.
+
+### Produce three artifacts
 
 ```
-Outcome                     Tools allowed
-Authoritative inputs        Acceptance criteria owned
-Repository scope            Dependencies on the other repository
-Allowed areas               Expected return shape
-Excluded areas              Stop conditions
+   docs/plans/orchestration-plan.md
+   docs/agent-briefs/tta-implementation-brief.md
+   docs/agent-briefs/processor-implementation-brief.md
 ```
 
-**Stop conditions matter more than they look.** "If the specification is silent on X, stop and
-report rather than choosing" is the line that prevents an agent inventing a business rule at minute
-twenty-two when nobody is watching it closely.
+Each implementation brief is a contract:
 
-You may use the planner to propose a decomposition. It does not own the rulings: **which service is
-authoritative, which contract version is targeted, and what order things happen in are yours.**
+```
+   ┌─────────────────────────────┬─────────────────────────────┐
+   │ Outcome                     │ Tools allowed               │
+   │ Authoritative inputs        │ Acceptance criteria owned   │
+   │ Repository scope            │ Dependencies on the other   │
+   │ Allowed areas               │ Expected return shape       │
+   │ Excluded areas              │ Stop conditions             │
+   └─────────────────────────────┴─────────────────────────────┘
+```
+
+**Stop conditions matter far more than they look.** A line like *"if the specification is silent
+on X, stop and report rather than choosing"* is what prevents an agent inventing a business rule
+at minute twenty-two, in a file nobody is watching closely, with complete confidence.
+
+You may use the planner to propose a decomposition. It does not own the rulings. **Which service
+is authoritative, which contract version you target, and what order things land in are yours.**
 
 ### The rollout question
 
 Derive a sequence in which old and new can coexist safely.
 
-Note what the question is not: it is not "which side is more important". It is "which combinations
-of deployed versions are safe while the change is in flight" — and a change can be perfectly
-correct in its final state and still be unsafe halfway through.
+Notice what that question is *not*. It is not "which side matters more". It is "which combinations
+of deployed versions are safe **while the change is in flight**" — and a change can be perfectly
+correct in its final state while being unsafe halfway there.
 
-```bash
-python3 scripts/run_pair_verification.py --explain
+```
+⌘  python3 scripts/run_pair_verification.py --explain
 ```
 
 ### ◆ Predict #3 — reopen Prediction #1
 
-You sealed an answer in Stage 0 before seeing any code. You now know the seam and the
-specification.
+You sealed an answer in Stage 0, blind. You now know the seam and the specification.
 
 > **Would you change your answer? What did you not know when you made it?**
 
-Write the revision next to the original. Keep both.
-
-Validate the plan:
-
-```bash
-python3 .claude/scripts/validate_plan.py
-```
+Write the revision next to the original. Keep both — the gap between them is the lesson.
 
 ```
-/hand-off
+⌘  python3 .claude/scripts/validate_plan.py
+⌘  /hand-off
 ```
 
 ---
 
-# Stage 4 — Build & Validate · *Build the Bounded Slice* · ~28–30 min
+```
+┌───────────────────────────────────────────────────────────── 28–30 min ──┐
+│  STAGE 4  ·  BUILD & VALIDATE                                            │
+│  Build the Bounded Slice                                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
-**Concept: bounded agent execution and deterministic guardrails.** AI generates inside tests,
-rules, gates, tool permissions and contract checks — not inside a conversation.
+**Concept** — bounded agent execution and deterministic guardrails
+**You leave with** — a remediated seam, built inside boundaries you set
 
-One scoped implementation context per repository. Each agent receives **only**:
+> AI generates inside **tests, rules, gates, tool permissions and contract checks** — not inside a
+> conversation.
 
-- the validated specification
-- its repository brief and implementation brief
-- the acceptance criteria it owns
-- that repository's `CLAUDE.md`
+### What each agent receives — and what it does not
 
-Not the other repository. Not this guide. Not your reasoning about the seam.
+```
+   ✓  GIVEN                              ✗  NOT GIVEN
+   ─────────                             ────────────
+   the validated specification           the other repository
+   its repository brief                  this action guide
+   its implementation brief              your reasoning about the seam
+   the acceptance criteria it owns       the other agent's return
+   that repository's CLAUDE.md
+```
 
-### The facilitator demonstrates: the shape of one implementation prompt
+One scoped implementation context per repository. The exclusions are the design, not an oversight.
 
-You will see the structure — outcome, authoritative inputs, scope, exclusions, expected return —
-and how it refuses to describe the fix. It states the outcome and the boundary, and leaves the
-implementation to the agent, because a prompt that specifies the diff is just a slower way of
-writing the diff yourself.
+### The facilitator demonstrates — the shape of an implementation prompt
 
-### ▶ Your turn: write the brief for the other repository
+Watch how it states the **outcome and the boundary**, and then refuses to describe the fix.
 
-Adapt it to what that repository actually owns. The two are not symmetric, and one of them may
-correctly conclude that it needs **no production change at all** — in which case its job is to say
-so and prove it. That is a real outcome, not a failed one.
+A prompt that specifies the diff is just a slower, more expensive way of writing the diff
+yourself. You are buying the agent's ability to find an implementation; if you hand it one, you
+have bought nothing and still have to review it.
+
+### ▶ Your turn — brief the other repository
+
+Adapt it to what that repository actually owns.
+
+The two are **not symmetric**. One of them may correctly conclude it needs **no production change
+at all** — in which case its job is to say so and prove it.
+
+> **That is a real outcome, not a failed one.** Establishing that a repository is already correct,
+> with evidence, is engineering work. Some of the best returns you get today will contain no diff.
 
 ### Expected return from each agent
 
 ```
-Files changed        Verification run
-ACs addressed        Open concern
-Tests added          No-scope-expansion confirmation
+   Files changed         Verification run
+   ACs addressed         Open concern
+   Tests added           No-scope-expansion confirmation
 ```
 
-### Two things to watch for, because they are the ones that will actually happen
+### Two things that will actually happen
 
-- **An agent will offer to fix something outside its repository.** Refuse it. That is the seam, and
-  the seam is yours.
-- **An agent will find nearby code that looks reusable and unfinished.** Adjacency is not
-  authorisation. If it is out of scope, the correct action is no diff plus a recorded reason.
+> ⚠ **An agent will offer to fix something in the other repository.** Refuse it. That is the seam,
+> and the seam is yours. An agent that can reach across the boundary has no way to know what it
+> would break, because it cannot see the other side.
+
+> ⚠ **An agent will find nearby code that looks reusable and unfinished.** It compiles. It shares
+> infrastructure with the refund path. It looks abandoned mid-change.
+>
+> **Adjacency is not authorisation.** If it is out of scope, the correct action is no diff plus a
+> recorded reason.
 
 ### Verify as you go
 
@@ -296,85 +560,139 @@ cd pgs-tta && mvn verify
 cd ../pgs-payment-processor && mvn verify
 ```
 
-**Both green does not mean done.** That is the entire premise of the lab. Writes follow the rollout
-order you decided in Stage 3.
+```
+   ╭──────────────────────────────────────────────────────────────╮
+   │  Both green does not mean done.                              │
+   │  That is the entire premise of this lab.                     │
+   ╰──────────────────────────────────────────────────────────────╯
+```
+
+Writes follow the rollout order you decided in Stage 3.
 
 ```
-/hand-off
+⌘  /hand-off
 ```
 
 ---
 
-# Stage 5 — Validate with Fresh Context · *Prove the Pair* · ~20 min
+```
+┌──────────────────────────────────────────────────────────────── 20 min ──┐
+│  STAGE 5  ·  VALIDATE WITH FRESH CONTEXT                                 │
+│  Prove the Pair                                        ★ NEVER CUT       │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
-**Concept: fresh-context validation and independent judgment.** Separate creation from judgment.
+**Concept** — fresh-context validation and independent judgment
+**You leave with** — evidence you did not produce, and rulings on what it found
 
-**This stage is never cut.** If Stage 4 runs long, the facilitator will apply a checkpoint and move
-the room here. Finishing the coding is worth less than seeing what independent judgment catches.
+> **Separate creation from judgment.**
+
+If Stage 4 runs long, the facilitator will apply a checkpoint and move the room here anyway.
+Arriving with four of five fixes done and seeing what independent judgment catches is a far better
+session than finishing the code and never finding out.
 
 ### ◆ Predict #4
 
-> Both repositories are green. **What will a fresh validator, or the pair harness, catch that your
-> green builds did not?** Write down one thing before you run either.
+> Both repositories are green and you believe the work is done.
+> **What will a fresh validator, or the pair harness, catch that your green builds did not?**
 
-### 1. Deterministic evidence first
+One thing, written down, before you run either.
 
-```bash
-python3 scripts/run_pair_verification.py
+### 1 · Deterministic evidence first
+
+```
+⌘  python3 scripts/run_pair_verification.py
 ```
 
-This is the answer to "are the two services actually in agreement". Each failure names the
-disagreement in its message.
+This answers the only question that matters: **are the two services actually in agreement?** Each
+failure names the disagreement in its own message.
 
-### 2. Then independent judgment
+```
+   THE COMPATIBILITY MATRIX
 
-```bash
-python3 .claude/scripts/build_validator_brief.py
+   previous consumer ──► previous producer     baseline. The world before this change.
+   previous consumer ──► current producer      MUST SUCCEED
+   current consumer  ──► previous producer     MUST BE SHOWN TO FAIL
+   current consumer  ──► current producer      the intended final state
 ```
 
-The brief is assembled mechanically from the specification, both diffs, the ledger, the pair
-results, the plan and the scope documents. It contains **no chat history and no builder
-rationale** — not because the script is careful, but because it has no access to them.
+That third row is the interesting one. The test **passes by detecting the incompatibility** — it
+is diagnostic, not permanently red. It is how the rollout order stops being an assertion
+somebody made and becomes something you can point at.
+
+### 2 · Then independent judgment
+
+```
+⌘  python3 .claude/scripts/build_validator_brief.py
+```
+
+The brief is assembled **mechanically** from an allowlist: the specification, both diffs, the
+ledger, the pair results, the plan, the scope documents.
+
+It contains no chat history and no builder rationale — **not because the script is careful about
+leaving them out, but because it has no way to reach them.** That is a structural guarantee rather
+than an instruction to be discreet, which is exactly why it is a script and not a prompt.
 
 Dispatch the fresh `code-to-spec-validator` against it. It has read and test tools and **no write
-tools**, so it cannot quietly fix what it finds. It never saw your session, so it cannot inherit
-your confidence in your own work.
+tools**, so it cannot quietly repair what it finds. It never saw your session, so it cannot
+inherit your confidence in your own work.
 
-### 3. Disposition every finding — `docs/finding-dispositions.md`
+### 3 · Disposition every finding
 
-| Finding | Evidence | In scope? | Material? | Disposition | Rationale |
+In `docs/finding-dispositions.md`:
 
-**A validator finding does not authorise a code change.** Some findings are correct and out of
-scope. Some are wrong. Some are right but immaterial. Deciding which is which is the judgment this
-stage exists to exercise, and it is graded on the disposition — not on agreeing with the validator.
+```
+  │ Finding │ Evidence │ In scope? │ Material? │ Disposition │ Rationale │
+```
+
+> ⚠ **A validator finding does not authorise a code change.**
+>
+> Some findings are correct and out of scope. Some are simply wrong. Some are right but
+> immaterial. Sorting them is the judgment this stage exists to build — and you are graded on the
+> disposition, **not** on agreeing with the validator.
 
 **Reveal:** compare against Prediction #4.
 
 ```
-/hand-off
+⌘  /hand-off
 ```
 
-### ⏸ Q&A pause — ~3 min
+### ⏸ Q&A pause — 3 min
 
 ---
 
-# Stage 6 — Review, Handoff & Close · *Transfer the Learning* · ~5–6 min
+```
+┌─────────────────────────────────────────────────────────────── 5–6 min ──┐
+│  STAGE 6  ·  REVIEW, HANDOFF & CLOSE                                     │
+│  Transfer the Learning                                                   │
+└──────────────────────────────────────────────────────────────────────────┘
+```
 
-**Concept: context handoff, evidence and the learning loop.**
+**Concept** — context handoff, evidence, and the learning loop
 
-1. **Reopen Prediction #1.** You have now answered the rollout question three times: blind, informed
-   and evidenced. Compare all three. What made the difference — and would you have discovered it
-   without the compatibility matrix?
+### 1 · Reopen Prediction #1
 
-2. **Record one reusable practice.** One sentence, in `docs/workflow-tracker.md`: something about
-   multi-repository AI work you would do again on Monday, on your own code.
+You have now answered the rollout question three times:
 
-3. **Close out.**
-   ```
-   /hand-off
-   ```
+```
+   Stage 0   blind        ─────►   Stage 3   informed   ─────►   Stage 5   evidenced
+```
 
-4. **Confirm the journey exists.** `.claude/journey/` should hold a real event trail.
+Compare all three. What made the difference — and would you have found it without the
+compatibility matrix?
+
+### 2 · Record one reusable practice
+
+One sentence in `docs/workflow-tracker.md`: something about multi-repository AI work you would do
+again on Monday, on your own code, with your own team.
+
+### 3 · Close out
+
+```
+⌘  /hand-off
+```
+
+Then confirm `.claude/journey/` holds a real event trail.
 
 ### What you should be able to say at the end
 
@@ -386,19 +704,45 @@ stage exists to exercise, and it is graded on the disposition — not on agreein
 
 ### And what it does not mean
 
-The lab proves the represented seam locally. It does not claim the wider PGS refund capability is
-production-ready, and pair verification does not replace integration testing or release governance.
+The lab proves the represented seam **locally**. It does not claim the wider PGS refund capability
+is production-ready, and pair verification does not replace integration testing or release
+governance.
 
 ---
 
-## Parking lot
+## The parking lot
 
-Environment problems, deep domain questions and anything that would derail the room goes here.
-The facilitator picks these up at the Q&A pauses or after the session. Nothing is lost by parking
-it, and a room of thirty loses a lot by debugging one laptop together.
+Environment problems, deep domain questions, and anything that would derail thirty people go
+here. The facilitator picks them up at the Q&A pauses or after the session.
+
+Nothing is lost by parking something. A room of thirty loses a great deal by debugging one laptop
+together.
 
 ## If you fall behind
 
-Say so. Stage 5 is the payoff and there are facilitator checkpoints for exactly this. Arriving at
-independent validation having done four of five fixes is a far better session than finishing the
-coding and never seeing what fresh context catches.
+Say so, early.
+
+Stage 5 is the payoff and there are facilitator checkpoints for exactly this situation. There is
+no prize for finishing the code — there is a great deal of value in reaching independent
+validation and finding out what it catches.
+
+```
+   ╭──────────────────────────────────────────────────────────────────────╮
+   │  Two outcomes that are wins, not failures:                           │
+   │                                                                      │
+   │    ▸ "No diff, and here is the evidence it was already correct."     │
+   │    ▸ "We do not know, and we refused to invent an answer."           │
+   ╰──────────────────────────────────────────────────────────────────────╯
+```
+
+## Reference
+
+| Document | What it answers |
+|---|---|
+| [`docs/ESSENTIAL_OUTCOMES.md`](docs/ESSENTIAL_OUTCOMES.md) | What is graded |
+| [`docs/TERM_CARD.md`](docs/TERM_CARD.md) | The ten terms |
+| [`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md) | When a spec is good enough |
+| [`docs/SCENARIO_GROUNDING.md`](docs/SCENARIO_GROUNDING.md) | Real PGS vs. lab vs. planted |
+| [`docs/PGS_DECISIONS.md`](docs/PGS_DECISIONS.md) | Every decision and its source |
+| [`specs/OUT_OF_SCOPE.md`](specs/OUT_OF_SCOPE.md) | What must not be built |
+| [`specs/NON_NEGOTIABLES.md`](specs/NON_NEGOTIABLES.md) | What holds regardless |

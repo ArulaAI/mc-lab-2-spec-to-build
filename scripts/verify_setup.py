@@ -4,15 +4,15 @@
 What it does
 ------------
 1. Checks the toolchain: a JDK, Maven, Git and Python.
-2. Creates the two service repositories from ``starter/``, each as a real Git repository with a
-   single committed starter commit. Stage 5 compares work against that commit, so a repository
-   without a committed HEAD cannot be reviewed.
+2. Initialises the two service directories (already at the repository root) as Git repositories,
+   each with a single committed starter commit. Stage 5 compares work against that commit, so a
+   repository without a committed HEAD cannot be reviewed.
 3. Warms the Maven cache by building both repositories.
 4. Confirms the expected starting state: each repository green on its own, the pair harness red.
 
     python3 scripts/verify_setup.py            # set up and check
     python3 scripts/verify_setup.py --check    # check only, change nothing
-    python3 scripts/verify_setup.py --reset    # DESTRUCTIVE: discard the working copies and restore
+    python3 scripts/verify_setup.py --reset    # DESTRUCTIVE: discard changes and restore pristine state
 
 Setup runs outside live session time. The first Maven build on a cold cache downloads
 dependencies, and a room of thirty people discovering that at minute three loses the lab.
@@ -87,7 +87,8 @@ def check_toolchain(r: Result) -> None:
 
 def check_workspace(r: Result) -> None:
     print("\nworkspace")
-    for rel in ["starter", "lab-harness/pair-verification", "specs/refund-seam-phase1.spec.md",
+    for rel in ["pgs-tta", "pgs-payment-processor", "lab-harness/pair-verification",
+                "specs/refund-seam-phase1.spec.md",
                 ".claude/hooks/gate_guard.py", ".claude/scripts/validate_spec.py"]:
         r.check(rel, (ROOT / rel).exists(), "present" if (ROOT / rel).exists() else "MISSING")
 
@@ -110,19 +111,30 @@ def create_repos(r: Result, reset: bool) -> None:
     print("\nservice repositories")
     for name in SERVICES:
         target = ROOT / name
-        source = ROOT / "starter" / name
 
-        if target.exists() and not reset:
+        if not target.exists():
+            r.check(name, False, "MISSING — expected at repository root", fatal=True)
+            continue
+
+        if (target / ".git").is_dir() and not reset:
             has_work = existing_work(target)
             r.check(name, True,
-                    "already present -- left untouched"
+                    "already initialised -- left untouched"
                     + (" (contains your work)" if has_work else ""), fatal=False)
             continue
 
-        if target.exists() and reset:
-            shutil.rmtree(target)
+        if reset and (target / ".git").is_dir():
+            shutil.rmtree(target / ".git")
+            # Restore pristine files from the parent repository
+            run(["git", "checkout", "HEAD", "--", name], cwd=ROOT)
+            # Remove any files participants added that are not in the pristine set
+            for child in target.rglob("*"):
+                if child.is_file() and child.name != ".DS_Store":
+                    rel = child.relative_to(ROOT)
+                    check = run(["git", "ls-files", str(rel)], cwd=ROOT)
+                    if not check.stdout.strip():
+                        child.unlink()
 
-        shutil.copytree(source, target, ignore=shutil.ignore_patterns("target", "journey"))
         run(["git", "init", "-q"], cwd=target)
         run(["git", "add", "-A"], cwd=target)
         run(["git", "-c", "user.name=Lab Setup", "-c", "user.email=lab@example.invalid",
@@ -131,7 +143,7 @@ def create_repos(r: Result, reset: bool) -> None:
         head = run(["git", "rev-parse", "--short", "HEAD"], cwd=target).stdout.strip()
         commits = len(run(["git", "log", "--oneline"], cwd=target).stdout.strip().splitlines())
         r.check(name, bool(head) and commits == 1,
-                f"created, one starter commit at {head}")
+                f"initialised, one starter commit at {head}")
 
 
 def confirm_state(r: Result) -> None:
@@ -154,8 +166,8 @@ def confirm_state(r: Result) -> None:
 
 def confirm_reset(targets: list[pathlib.Path]) -> bool:
     print("\n--reset is destructive.\n")
-    print("  These directories will be DELETED and rebuilt from starter/.")
-    print("  Any code you have written in them, and their entire Git history, will be lost:\n")
+    print("  These directories will be restored to their pristine state.")
+    print("  Any code you have written in them, and their Git history, will be lost:\n")
     for t in targets:
         marker = "  <-- contains work beyond the starter commit" if existing_work(t) else ""
         print(f"    {t.relative_to(ROOT)}{marker}")

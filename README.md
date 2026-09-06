@@ -50,30 +50,30 @@ inside either one — which is why the central fact of the lab is:
 python3 scripts/verify_setup.py
 ```
 
-This checks the toolchain, creates the two service repositories from `starter/` (each a real Git
-repository with one committed starter commit), warms the Maven cache, and confirms the starting
-state. It must end with **"Setup complete"**.
+This checks the toolchain, initialises the two service directories (`pgs-tta/` and
+`pgs-payment-processor/`, already at the repository root) as Git repositories with one committed
+starter commit, warms the Maven cache, and confirms the starting state. It must end with **"Setup
+complete"**.
 
-`--check` verifies without changing anything. `--reset` is destructive: it discards the working
-copies and restores them from `starter/`, and asks for confirmation naming exactly what it will
-delete.
+`--check` verifies without changing anything. `--reset` is destructive: it restores both service
+directories to their pristine state and asks for confirmation naming exactly what it will discard.
 
 ---
 
 ## Layout
 
 ```
+pgs-tta/        the TTA service — your working copy
+pgs-payment-processor/   the Payment Processor service — your working copy
 specs/          the specification, plus the write-protected authority documents
 docs/           pre-read, term card, outcomes, grounding, decisions, ledger, tracker
-starter/        pristine source for the two services; setup copies it out
 lab-harness/    pair-verification harness -- readable, not writable
 .claude/        lab config, write gate, auditor agent, validators, rubric, grader
 scripts/        setup and pair verification
 ```
 
-After setup, `pgs-tta/` and `pgs-payment-processor/` appear at the root as independent Git
-repositories. They are gitignored here on purpose: nesting one repository's history inside
-another's is how solution history leaks.
+After `verify_setup.py` runs, `pgs-tta/` and `pgs-payment-processor/` become independent Git
+repositories (each with their own `.git/` directory and a single starter commit).
 
 ## The seven stages
 

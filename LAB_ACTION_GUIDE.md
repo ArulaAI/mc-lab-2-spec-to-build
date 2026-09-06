@@ -83,8 +83,8 @@ the next stage something concrete.
         │
        ⏸  Q&A
         │
-  3  Plan Across Repositories       orchestration & context            plan + 2 agent briefs
-        │                           isolation
+  3  Plan Across Repositories       planning, briefing &               plan + 2 agent briefs
+        │                           rollout sequencing
   4  Build & Validate               bounded execution, deterministic   a remediated seam
         │                           guardrails
   5  Validate with Fresh Context    independent judgment               evidence you didn't write
@@ -167,6 +167,8 @@ Must end with **"Setup complete"**. If it does not, flag it now — not at minut
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
+*You are about to commit to an answer you cannot take back. You have ten minutes.*
+
 **Concept** — context boundary and authority
 **You leave with** — a sealed prediction, and knowing which document wins an argument
 
@@ -206,16 +208,16 @@ planted ones are teaching fixtures. They do not imply anything about real Master
    specs/refund-seam-phase1.spec.md   ◄── what to build, once it is READY
 ```
 
-Higher wins. The top three are **write-protected** — try to edit one and the write gate stops you.
-That is deliberate: a lab whose rules can be edited by the thing being graded is not measuring
-anything.
+Higher wins. `NON_NEGOTIABLES.md`, `OUT_OF_SCOPE.md` and `ESSENTIAL_OUTCOMES.md` are
+**write-protected** — try to edit one and the write gate stops you. That is deliberate: a lab
+whose rules can be edited by the thing being graded is not measuring anything.
 
-### 4 · ◆ Predict #1 — seal this now
+### 4 · ◆ Predict #1 — seal it, you cannot change it later
 
 > Two repositories have to end up agreeing.
 > **Which side should change first, and why?**
 
-Write it in your notes, with your reasoning, before you look at a single line of code.
+Write it down now, with your reasoning, before you look at a single line of code.
 
 You will reopen this twice — once when you understand the seam, and once when you have hard
 evidence. Do not go researching it now. A prediction you have already looked up teaches you
@@ -235,6 +237,8 @@ nothing.
 │  Map the Seam                                                            │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
+
+*Two agents will each tell you the truth. They will contradict each other.*
 
 **Concept** — scoped sub-agents and parallel delegation
 **You leave with** — a context ledger you reconciled yourself
@@ -327,6 +331,9 @@ evidence, and an agent has no way to signal the difference.
 
 **Reveal:** compare your ledger against Prediction #2. What could the first agent not have known?
 
+*What you just proved: two independent accounts of a seam produce disagreements that one combined
+account would have hidden with plausible invention.*
+
 ```
 ⌘  /hand-off
 ```
@@ -340,6 +347,8 @@ evidence, and an agent has no way to signal the difference.
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
+*The spec is broken. The gate will prove it. Your job is to fix it without inventing anything.*
+
 **Concept** — spec-as-context and readiness gates
 **You leave with** — a specification an agent can build from without guessing
 
@@ -352,8 +361,11 @@ is the highest-leverage document in the lab, and right now it is not good enough
 ⌘  python3 .claude/scripts/validate_spec.py
 ```
 
-It will refuse the specification and name the failing checks. They map to the eight checks in
+It will refuse the specification and name the failing checks. They map to the twelve checks in
 [`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md).
+
+Run the gate before you start editing — the failing check names are your editing queue. Work
+through them with your agent and re-run until all twelve pass.
 
 ### The facilitator demonstrates — one weak requirement becoming testable
 
@@ -410,6 +422,9 @@ The gate is structural. It tells you the specification is well-formed, never tha
 which is why the status file records `"semantic_authority": "human-reviewed"` rather than quietly
 implying a machine approved the content.
 
+*What you just built: the single document every agent in Stage 4 will treat as truth. Everything
+vague you left in it will become an invention you did not authorise.*
+
 ```
 ⌘  /hand-off
 ```
@@ -424,15 +439,17 @@ the room.
 ```
 ┌───────────────────────────────────────────────────────────── 14–15 min ──┐
 │  STAGE 3  ·  PLAN ACROSS REPOSITORIES                                    │
-│  Design the Orchestration                                                │
+│  Plan and Brief                                                          │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Concept** — agent orchestration and context isolation
+*The agents you are about to dispatch are only as good as what you write in the next 14 minutes.*
+
+**Concept** — planning, briefing, and rollout sequencing
 **You leave with** — an orchestration plan and two agent briefs
 
-> **Orchestration is not launching more agents.** It is deciding who knows what, who does what,
-> and who decides what.
+No agents are dispatched here — that is Stage 4. Your job now is to write the contracts they will
+work from. Deciding who knows what, who does what, and who decides what.
 
 ### Produce three artifacts
 
@@ -481,6 +498,9 @@ You sealed an answer in Stage 0, blind. You now know the seam and the specificat
 
 Write the revision next to the original. Keep both — the gap between them is the lesson.
 
+*What you just decided: who changes first, what each agent may touch, and when it must stop.
+Every boundary you drew here is a boundary the agents cannot cross in Stage 4.*
+
 ```
 ⌘  python3 .claude/scripts/validate_plan.py
 ⌘  /hand-off
@@ -494,6 +514,8 @@ Write the revision next to the original. Keep both — the gap between them is t
 │  Build the Bounded Slice                                                 │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
+
+*Now the AI touches code. Everything you decided in Stages 0–3 is about to be tested.*
 
 **Concept** — bounded agent execution and deterministic guardrails
 **You leave with** — a remediated seam, built inside boundaries you set
@@ -541,7 +563,11 @@ at all** — in which case its job is to say so and prove it.
    Tests added           No-scope-expansion confirmation
 ```
 
-### Two things that will actually happen
+### Three things that will actually happen
+
+> ⚠ **You will be tempted to dispatch one agent for both repositories.** Don't. The moment you
+> give one agent both repos, you have re-created the visibility problem you spent Stage 1 avoiding.
+> One agent per repository, in the rollout order you decided in Stage 3.
 
 > ⚠ **An agent will offer to fix something in the other repository.** Refuse it. That is the seam,
 > and the seam is yours. An agent that can reach across the boundary has no way to know what it
@@ -569,6 +595,8 @@ cd ../pgs-payment-processor && mvn verify
 
 Writes follow the rollout order you decided in Stage 3.
 
+*Both repos are green. You are about to find out if that means anything.*
+
 ```
 ⌘  /hand-off
 ```
@@ -582,6 +610,8 @@ Writes follow the rollout order you decided in Stage 3.
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
+*Something that has never seen your work is about to judge it. You do not get to argue back.*
+
 **Concept** — fresh-context validation and independent judgment
 **You leave with** — evidence you did not produce, and rulings on what it found
 
@@ -591,12 +621,12 @@ If Stage 4 runs long, the facilitator will apply a checkpoint and move the room 
 Arriving with four of five fixes done and seeing what independent judgment catches is a far better
 session than finishing the code and never finding out.
 
-### ◆ Predict #4
+### ◆ Predict #4 — what did you miss?
 
 > Both repositories are green and you believe the work is done.
-> **What will a fresh validator, or the pair harness, catch that your green builds did not?**
+> **Name one thing a fresh validator or the pair harness will catch that your green builds did not.**
 
-One thing, written down, before you run either.
+One thing, written down, before you run either. Be specific.
 
 ### 1 · Deterministic evidence first
 
@@ -637,6 +667,12 @@ Dispatch the fresh `code-to-spec-validator` against it. It has read and test too
 tools**, so it cannot quietly repair what it finds. It never saw your session, so it cannot
 inherit your confidence in your own work.
 
+> **Expect the validator to report FAIL even when the harness is green.** The validator works
+> from the diff — it can only see what changed. Pre-existing correct code (for example, the
+> processor's limit enforcement that shipped with the starter) is invisible to it. When the
+> validator says a criterion is not met and the harness is green for that criterion, the harness
+> is the ground truth. Disposition the finding as "pre-existing, harness GREEN is the evidence."
+
 ### 3 · Disposition every finding
 
 In `docs/finding-dispositions.md`:
@@ -650,6 +686,12 @@ In `docs/finding-dispositions.md`:
 > Some findings are correct and out of scope. Some are simply wrong. Some are right but
 > immaterial. Sorting them is the judgment this stage exists to build — and you are graded on the
 > disposition, **not** on agreeing with the validator.
+
+### 4 · If the harness is RED and findings are material — loop back
+
+Return to Stage 4: fix the defect, re-run `mvn verify`, then come back here and restart from
+step 1. Watch the harness count — if the number of failing tests goes down, you are converging.
+If it stays flat or the validator produces new material findings, something real is still broken.
 
 **Reveal:** compare against Prediction #4.
 
@@ -667,6 +709,8 @@ In `docs/finding-dispositions.md`:
 │  Transfer the Learning                                                   │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
+
+*You made a prediction blind, revised it informed, and now have evidence. How wrong were you?*
 
 **Concept** — context handoff, evidence, and the learning loop
 
@@ -746,3 +790,4 @@ validation and finding out what it catches.
 | [`docs/PGS_DECISIONS.md`](docs/PGS_DECISIONS.md) | Every decision and its source |
 | [`specs/OUT_OF_SCOPE.md`](specs/OUT_OF_SCOPE.md) | What must not be built |
 | [`specs/NON_NEGOTIABLES.md`](specs/NON_NEGOTIABLES.md) | What holds regardless |
+| [`docs/CHALLENGE.md`](docs/CHALLENGE.md) | Bonus: break the gate |

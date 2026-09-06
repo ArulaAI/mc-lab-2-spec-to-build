@@ -1,8 +1,7 @@
-# Working copies of the two service repositories. Created by scripts/verify_setup.py from
-# starter/, each as its own Git repository. They are deliberately not tracked here: nesting one
-# repository's history inside another's is how solution history leaks.
-/pgs-tta/
-/pgs-payment-processor/
+# After verify_setup.py runs, each service directory becomes its own Git repository.
+# Ignore the inner .git directories so the parent repo does not treat them as submodules.
+pgs-tta/.git
+pgs-payment-processor/.git
 
 # Facilitator package. Never part of the participant distribution -- keeping it untracked means it
 # cannot leak into participant history by accident rather than by discipline.
@@ -13,6 +12,12 @@ target/
 .claude/journey/
 journey/
 *.class
+
+# Facilitator-only files — not distributed to participants
+/facilitator_script.md
+
+# Python cache
+__pycache__/
 
 # macOS
 .DS_Store

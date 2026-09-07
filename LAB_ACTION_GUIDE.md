@@ -136,6 +136,11 @@ will actually need.
   ⏸ Q&A pause   Scheduled, so questions land somewhere instead of derailing the room.
 
   ⌘ Run         A command to actually execute.
+
+  ⌂ You'll see  Real output from a real run, so you can tell "different" from "wrong".
+                Yours will differ in wording. It should not differ in shape.
+
+  ✓ Done when   The self-check that closes a stage. If you can tick these, move on.
 ```
 
 ### Before anything else
@@ -185,6 +190,12 @@ ambiguity.
 Then confirm a journey event actually landed in `.claude/journey/` — not merely that the command
 returned. A silent journey failure surfaces at Stage 6, which is far too late to fix it.
 
+**⌂ You'll see** — at least one `.jsonl` file, and it is not empty:
+
+```bash
+ls -la .claude/journey/
+```
+
 ### 2 · Read the boundary
 
 Open [`docs/SCENARIO_GROUNDING.md`](docs/SCENARIO_GROUNDING.md).
@@ -224,6 +235,14 @@ evidence. Do not go researching it now. A prediction you have already looked up 
 nothing.
 
 ### 5 · Close the stage
+
+### ✓ Done when
+
+```
+  [ ] /lab ran and .claude/journey/ contains at least one event
+  [ ] you can name which document wins if the spec and NON_NEGOTIABLES disagree
+  [ ] Prediction #1 is written down, with reasoning, before you opened any code
+```
 
 ```
 ⌘  /hand-off
@@ -314,6 +333,19 @@ In [`docs/context-ledger.md`](docs/context-ledger.md):
   │ Claim │ Asserted in │ Evidence │ Contradicted by │ Your ruling │ Status │
 ```
 
+**⌂ You'll see** — your wording will differ, but a row that has actually been reconciled carries
+weight in all six columns:
+
+```
+| Claim                 | Asserted in | Evidence         | Contradicted by    | Your ruling        | Status       |
+| TTA believes the      | pgs-tta     | PaymentProcessor | the processor      | processor's        | CONTRADICTED |
+| processor exposes one | (client)    | Client.java:58   | publishes a second | published contract |              |
+| refund endpoint       |             |                  | endpoint           | is authoritative   |              |
+```
+
+A row with three empty cells is a note to yourself, not a finding. The grader counts populated
+cells for exactly that reason.
+
 This part is yours, not the agents'. Three things to be deliberate about:
 
 **A claim is what a repository believes about the world beyond itself.** Those are the rows that
@@ -333,6 +365,18 @@ evidence, and an agent has no way to signal the difference.
 
 *What you just proved: two independent accounts of a seam produce disagreements that one combined
 account would have hidden with plausible invention.*
+
+### ✓ Done when
+
+```
+  [ ] both repositories were audited by separate agents, not one agent twice
+  [ ] the ledger has a row for the contract situation and a row for the business rule
+  [ ] every row has a ruling — none left blank
+  [ ] at least one row is still UNKNOWN, because you could not settle it honestly
+```
+
+If every row came back VERIFIED and nothing is UNKNOWN, you have probably accepted an agent's
+confidence as evidence. Go back and ask which repository actually *proved* each claim.
 
 ```
 ⌘  /hand-off
@@ -361,8 +405,29 @@ is the highest-leverage document in the lab, and right now it is not good enough
 ⌘  python3 .claude/scripts/validate_spec.py
 ```
 
-It will refuse the specification and name the failing checks. They map to the twelve checks in
-[`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md).
+It will refuse the specification and name the failing checks.
+
+The twelve checks it runs are the twelve in
+[`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md), one for one. They are all
+structural — is a section present, does a criterion carry an identifier, is an owner named. None
+of them can tell you the specification is *correct*, which is why the status file records
+`"semantic_authority": "human-reviewed"` instead of implying a machine approved the content.
+
+**⌂ You'll see** — the shipped specification fails six of the twelve:
+
+```
+  [PASS] required sections present                           all present
+  [FAIL] metadata names an owner                             Owner is unset or marked unassigned
+  [FAIL] acceptance criteria describe observable outcomes    unobservable phrasing: handled correctly
+  [FAIL] every contested decision has a named owner          no owner named for: ...
+  [FAIL] idempotency section is implementable                does not state: ...
+  ...
+  6/12 structural checks  ->  DRAFT
+```
+
+By the end of this stage that last line reads `12/12 structural checks  ->  READY`. It is a
+deterministic script, not a model, so that number is the same for everyone in the room. If yours
+says READY and your neighbour's says DRAFT, you have a real difference — not a formatting one.
 
 Run the gate before you start editing — the failing check names are your editing queue. Work
 through them with your agent and re-run until all twelve pass.
@@ -424,6 +489,15 @@ implying a machine approved the content.
 
 *What you just built: the single document every agent in Stage 4 will treat as truth. Everything
 vague you left in it will become an invention you did not authorise.*
+
+### ✓ Done when
+
+```
+  [ ] validate_spec.py reports READY
+  [ ] OQ-1 is still listed as open — you did not answer it
+  [ ] every ownership row names exactly one service
+  [ ] anything you added traces to a line you can point at in PGS_DECISIONS.md
+```
 
 ```
 ⌘  /hand-off
@@ -500,6 +574,15 @@ Write the revision next to the original. Keep both — the gap between them is t
 
 *What you just decided: who changes first, what each agent may touch, and when it must stop.
 Every boundary you drew here is a boundary the agents cannot cross in Stage 4.*
+
+### ✓ Done when
+
+```
+  [ ] validate_plan.py reports READY
+  [ ] each brief names its repository, its ACs, its excluded areas and its stop conditions
+  [ ] the rollout order is written down WITH the reason it is safe in that order
+  [ ] Prediction #3 sits next to Prediction #1, both still legible
+```
 
 ```
 ⌘  python3 .claude/scripts/validate_plan.py
@@ -597,6 +680,17 @@ Writes follow the rollout order you decided in Stage 3.
 
 *Both repos are green. You are about to find out if that means anything.*
 
+### ✓ Done when
+
+```
+  [ ] both repositories pass mvn verify on their own
+  [ ] every changed file traces to an acceptance criterion you can name
+  [ ] no agent was given both repositories
+  [ ] nothing out of scope was implemented — and where you refused, you wrote down why
+```
+
+Both green is the *entry* condition for Stage 5, not the finish line.
+
 ```
 ⌘  /hand-off
 ```
@@ -618,8 +712,8 @@ Writes follow the rollout order you decided in Stage 3.
 > **Separate creation from judgment.**
 
 If Stage 4 runs long, the facilitator will apply a checkpoint and move the room here anyway.
-Arriving with four of five fixes done and seeing what independent judgment catches is a far better
-session than finishing the code and never finding out.
+Arriving with part of the work done and seeing what independent judgment catches is a far
+better session than finishing the code and never finding out. Nobody is counting your fixes.
 
 ### ◆ Predict #4 — what did you miss?
 
@@ -668,10 +762,15 @@ tools**, so it cannot quietly repair what it finds. It never saw your session, s
 inherit your confidence in your own work.
 
 > **Expect the validator to report FAIL even when the harness is green.** The validator works
-> from the diff — it can only see what changed. Pre-existing correct code (for example, the
-> processor's limit enforcement that shipped with the starter) is invisible to it. When the
-> validator says a criterion is not met and the harness is green for that criterion, the harness
-> is the ground truth. Disposition the finding as "pre-existing, harness GREEN is the evidence."
+> from the diff — it can only see what *changed*. Any behaviour that was already correct before
+> you started is invisible to it, so it will report criteria as unmet that are in fact
+> satisfied by code you never touched.
+>
+> That is not a bug in the validator; it is the cost of judging from a diff, and knowing it is
+> part of reading any review honestly. Where the validator and the harness disagree about a
+> criterion, the harness is the ground truth — it executes the behaviour, the validator only
+> reads the change. Disposition those as `PRE-EXISTING`, and say which harness test is your
+> evidence.
 
 ### 3 · Disposition every finding
 
@@ -694,6 +793,15 @@ step 1. Watch the harness count — if the number of failing tests goes down, yo
 If it stays flat or the validator produces new material findings, something real is still broken.
 
 **Reveal:** compare against Prediction #4.
+
+### ✓ Done when
+
+```
+  [ ] run_pair_verification.py has been run and you know its result
+  [ ] the validator brief was generated and a fresh validator judged it
+  [ ] every finding has a disposition AND a rationale
+  [ ] you can say what the harness proves and what it does not
+```
 
 ```
 ⌘  /hand-off
@@ -731,6 +839,14 @@ One sentence in `docs/workflow-tracker.md`: something about multi-repository AI 
 again on Monday, on your own code, with your own team.
 
 ### 3 · Close out
+
+### ✓ Done when
+
+```
+  [ ] Predictions #1, #3 and your Stage 5 answer are all visible together
+  [ ] one reusable practice is written in docs/workflow-tracker.md
+  [ ] the journey trail exists
+```
 
 ```
 ⌘  /hand-off
@@ -778,6 +894,52 @@ validation and finding out what it catches.
    │    ▸ "We do not know, and we refused to invent an answer."           │
    ╰──────────────────────────────────────────────────────────────────────╯
 ```
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `verify_setup.py` does not end with "Setup complete" | A prerequisite is missing, or the first Maven build has not resolved yet | Read the first `[FAIL]` line — it names the tool. A cold Maven cache can take several minutes; let it finish before concluding anything |
+| `mvn verify` fails in a repository you have not touched | You are mid-edit, or an earlier agent left the tree inconsistent | `git -C <repo> diff` to see what changed. `git -C <repo> checkout -- .` returns that repository to its starter commit |
+| The pair harness cannot resolve `pgs-tta` or `pgs-payment-processor` | The services were not installed to your local Maven repository, or only one was | Use `python3 scripts/run_pair_verification.py` rather than calling Maven in the harness directly — it installs both, in the required order |
+| `validate_spec.py` stays at DRAFT and you cannot see why | A failing check is worded generally | Every `[FAIL]` line states what is missing. Fix them one at a time and re-run; the count moves |
+| The write gate blocked a file you believe you need | It is authority rather than workspace | Read it instead. If you are convinced the change is genuinely required, that is a finding to raise, not a file to force |
+| An agent asks to change the other repository | Its brief did not bound it, or it is guessing across the boundary | Refuse, and tighten the brief's excluded areas. The seam is yours |
+| The validator reports FAIL while the harness is green | The validator judges from the diff and cannot see code that was already correct | Disposition it `PRE-EXISTING` and name the harness test that is your evidence |
+| `.claude/journey/` is empty after `/lab` | Journey recording did not start | Re-run `/lab`. Do this at Stage 0 — it cannot be reconstructed later |
+
+## If you run out of time
+
+Time-boxes, so a stall does not cost you the stage that matters:
+
+- **Stage 2 will not reach READY.** Take the best specification you have, write the remaining gaps
+  into Open Questions, and move on. A specification with honest gaps is workable; a stage you
+  never left is not.
+- **Stage 4 is unfinished.** Stop where you are and go to Stage 5 anyway. Partial work judged
+  independently teaches more than complete work nobody checked.
+- **A repository is beyond recovery.** `git -C <repo> checkout -- .` returns it to the starter
+  commit. `python3 scripts/verify_setup.py --reset` rebuilds both from scratch, and will tell you
+  exactly what it is about to discard before it does it.
+- **You are simply behind.** Say so. There are facilitator checkpoints for this and using one
+  costs you nothing.
+
+## If you finish early
+
+Two things worth your time, in this order.
+
+**1 · Break the write gate.** [`docs/CHALLENGE.md`](docs/CHALLENGE.md)
+
+You have met the gate by now — it stopped you from editing something. So break it. It is
+breakable, and finding out how is more instructive than being told. When you have a bypass, the
+question that matters is not the technique but this one: *if a control can be routed around, what
+is actually protecting the thing it guards?*
+
+Revert anything you actually change. A protected file left modified fails the grading checks and
+shows up in the anti-gaming report — which is the point, but you would rather demonstrate it
+deliberately than by accident.
+
+**2 · Write the brief you would use on Monday.** Take one of your Stage 3 agent briefs and rewrite
+it against a seam in a repository you actually own. That is the artifact worth leaving with.
 
 ## Reference
 

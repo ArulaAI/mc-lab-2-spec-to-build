@@ -82,10 +82,17 @@ repositories (each with their own `.git/` directory and a single starter commit)
 | 0 | Ground the Work | Frame the Boundary | 10 |
 | 1 | Audit Context | Map the Seam | 18–20 |
 | 2 | Author & Validate the Spec | Make the Spec Buildable | 18–20 |
+| — | *Scheduled Q&A pause* | *Questions land here, not mid-stage* | 3 |
 | 3 | Plan Across Repositories | Design the Orchestration | 14–15 |
 | 4 | Build & Validate | Build the Bounded Slice | 28–30 |
 | 5 | Validate with Fresh Context | Prove the Pair | 20 |
+| — | *Scheduled Q&A pause* | *Questions land here, not mid-stage* | 3 |
 | 6 | Review, Handoff & Close | Transfer the Learning | 5–6 |
+
+At the low end of every stage this totals **119 of the 120 minutes**, the two Q&A pauses included.
+The ranges are where the facilitator *trades* time between stages, not where extra time comes
+from. Stage 5 is the anchor and is never cut; when something overruns, the trade comes out of
+Stage 4.
 
 ---
 

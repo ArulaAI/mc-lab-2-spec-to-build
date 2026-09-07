@@ -1,0 +1,4 @@
+Stage 3 writes orchestration-plan.md here.
+
+Deliberately empty: the plan is yours to author. `python3 .claude/scripts/validate_plan.py`
+tells you what it must contain, and the guide prints the required contract fields.

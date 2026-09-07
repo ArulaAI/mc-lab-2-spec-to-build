@@ -65,7 +65,13 @@ def glob_to_regex(pattern: str) -> re.Pattern:
     to. This implements the conventional shell semantics instead -- `**` crosses separators,
     `*` and `?` do not.
     """
-    pattern = pattern.replace("\\", "/").lstrip("./")
+    # NOT `lstrip("./")`: that strips any leading run of `.` and `/` characters rather than
+    # the `./` prefix, so a rule like `.claude/rubrics/**` silently became
+    # `claude/rubrics/**` and matched nothing. A deny rule that quietly protects nothing is
+    # worse than no rule at all, because the config still claims the protection.
+    pattern = pattern.replace("\\", "/")
+    while pattern.startswith("./"):
+        pattern = pattern[2:]
     out = ["^"]
     i = 0
     n = len(pattern)
@@ -375,6 +381,16 @@ def self_test() -> int:
          lambda: ev("Edit", {"file_path": "docs/ESSENTIAL_OUTCOMES.md"})),
         (True, "the facilitator package",
          lambda: ev("Write", {"file_path": "facilitator/SEED_MANIFEST.md"})),
+        (True, "DOT-PREFIX: the gate's own deny list",
+         lambda: ev("Write", {"file_path": ".claude/gate-guard.json"})),
+        (True, "DOT-PREFIX: the gate's own hook",
+         lambda: ev("Edit", {"file_path": ".claude/hooks/gate_guard.py"})),
+        (True, "DOT-PREFIX: the grading rubric",
+         lambda: ev("Write", {"file_path": ".claude/rubrics/lab-2.yaml"})),
+        (True, "DOT-PREFIX: the seed fixtures",
+         lambda: ev("Write", {"file_path": ".claude/fixtures/protected-files.json"})),
+        (True, "DOT-PREFIX: hook settings",
+         lambda: ev("Edit", {"file_path": ".claude/settings.json"})),
         # controls -- these must NOT block, or the hook makes the lab unusable
         (False, "CONTROL: an ordinary source file in a service repo",
          lambda: ev("Write", {"file_path": "pgs-tta/src/main/java/com/mc/pgs/lab2/tta/service/RefundTranslationService.java"})),
@@ -382,6 +398,12 @@ def self_test() -> int:
          lambda: ev("Write", {"file_path": "specs/refund-seam-phase1.spec.md"})),
         (False, "CONTROL: the context ledger",
          lambda: ev("Write", {"file_path": "docs/context-ledger.md"})),
+        (False, "CONTROL: the finding dispositions table",
+         lambda: ev("Write", {"file_path": "docs/finding-dispositions.md"})),
+        (False, "CONTROL: the bonus challenge notes",
+         lambda: ev("Write", {"file_path": "docs/CHALLENGE.md"})),
+        (False, "CONTROL: a dot-path the lab does not protect",
+         lambda: ev("Write", {"file_path": ".gitignore"})),
         (False, "CONTROL: a path outside the repo entirely",
          lambda: ev("Write", {"file_path": "/tmp/scratch.txt"})),
         (False, "CONTROL: a non-write tool targeting a gated path",

@@ -22,6 +22,7 @@ Check vocabulary
     seed_intact:<fixture-id>                  a seeded file is unmodified and uncorrupted
     repo_changed:<repo>                       that service repository has work beyond its starter
     all_of:<check>;<check>                    every sub-check passes
+    any_of:<check>;<check>                    at least one sub-check passes
 
 What this cannot prove, said plainly
 ------------------------------------
@@ -160,6 +161,19 @@ def run_check(spec: str, ws: Workspace) -> tuple[bool, str]:
             sub_ok, sub_detail = run_check(sub.strip(), ws)
             details.append(("PASS " if sub_ok else "FAIL ") + sub.strip())
             ok = ok and sub_ok
+        return ok, " | ".join(details)
+
+    if spec.startswith("any_of:"):
+        # Needed because one repository may legitimately require no change. Naming which one in
+        # the check would encode where the defects are, in a file participants can read.
+        subs = [x for x in spec[len("any_of:"):].split(";") if x.strip()]
+        if not subs:
+            raise CheckError("any_of with no sub-checks")
+        details, ok = [], False
+        for sub in subs:
+            sub_ok, _ = run_check(sub.strip(), ws)
+            details.append(("PASS " if sub_ok else "FAIL ") + sub.strip())
+            ok = ok or sub_ok
         return ok, " | ".join(details)
 
     if spec.startswith("event_count_gte:"):
@@ -369,6 +383,13 @@ def self_test(real_root: str, rubric_path: str) -> int:
         cases.append(("a crammed single-row ledger earns no ledger credit",
                       not any(c["passed"] for c in ledger),
                       "; ".join(f"{c['id']}={c['passed']}" for c in ledger)))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        scaffold(tmp)
+        ws = Workspace(tmp)
+        yes, _ = run_check("any_of:file_contains:%s:pass_threshold;file_contains:nope.md:x" % rubric_path, ws)
+        no, _ = run_check("any_of:file_contains:nope.md:x;file_contains:also-nope.md:y", ws)
+        cases.append(("any_of passes on one hit and fails on none", yes and not no, f"{yes}/{no}"))
 
     ok = True
     for label, passed, detail in cases:

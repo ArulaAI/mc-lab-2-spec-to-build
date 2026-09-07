@@ -593,13 +593,27 @@ work from. Deciding who knows what, who does what, and who decides what.
 
 Each implementation brief is a contract:
 
-| Each brief settles | And also |
+| Each contract settles | And also |
 |---|---|
-| Outcome | Tools allowed |
-| Authoritative inputs | Acceptance criteria owned |
-| Repository scope | Dependencies on the other repository |
-| Allowed areas | Expected return shape |
-| Excluded areas | Stop conditions |
+| Repository | Tools allowed |
+| Objective | **Acceptance criteria owned** |
+| Authoritative context | **NO_DIFF_EXPECTED: true \| false** |
+| Allowed repository scope | Verification required |
+| Excluded areas | Expected return shape |
+| | Stop conditions |
+
+Two of those decide what Stage 5 can even do.
+
+**Acceptance criteria owned** is the per-repository split. Stage 5 judges each repository against
+*its own* criteria rather than reviewing one combined diff, so a criterion nobody owns is a
+criterion nobody validates. The plan gate enforces it: every criterion owned by at least one
+contract, each contract owning at least one, and no contract inventing a criterion the
+specification does not contain.
+
+**NO_DIFF_EXPECTED** is a separate statement from owning nothing. A repository can legitimately own
+criteria and expect to change no code — in which case the contract says so, and the job becomes
+proving those criteria are already satisfied. Owning no criteria at all is not the same claim, and
+leaves that repository's validator with nothing to judge.
 
 **Stop conditions matter far more than they look.** A line like *"if the specification is silent
 on X, stop and report rather than choosing"* is what prevents an agent inventing a business rule
@@ -668,31 +682,38 @@ Every boundary you drew here is a boundary the agents cannot cross in Stage 4.*
    ✓  GIVEN                              ✗  NOT GIVEN
    ─────────                             ────────────
    the validated specification           the other repository
-   its repository brief                  this action guide
-   its implementation brief              your reasoning about the seam
-   the acceptance criteria it owns       the other agent's return
-   that repository's CLAUDE.md
+   its agent contract                    this action guide
+   the criteria that contract owns       your reasoning about the seam
+   that repository's CLAUDE.md           the other agent's return
 ```
 
 One scoped implementation context per repository. The exclusions are the design, not an oversight.
 
-### The facilitator demonstrates — the shape of an implementation prompt
+### You do not write an implementation prompt
 
-Watch how it states the **outcome and the boundary**, and then refuses to describe the fix.
+The contracts you wrote in Stage 3 *are* the instruction. A prebuilt agent —
+`repo-implementer` — executes one contract against one repository. You authorise; you do not
+re-describe the work in prose.
 
-A prompt that specifies the diff is just a slower, more expensive way of writing the diff
-yourself. You are buying the agent's ability to find an implementation; if you hand it one, you
-have bought nothing and still have to review it.
+That is the point of having written a contract. A prompt that also specifies the diff is a slower,
+more expensive way of writing the diff yourself: you are buying the agent's ability to find an
+implementation, and if you hand it one you have bought nothing and still have to review it.
 
-### ▶ Your turn — brief the other repository
+### ▶ Your turn — authorise both, then read what comes back
 
-Adapt it to what that repository actually owns.
+Dispatch both implementers, one per repository, each with only its own contract.
 
-The two are **not symmetric**. One of them may correctly conclude it needs **no production change
-at all** — in which case its job is to say so and prove it.
+**The agent runs the verification, not you.** Its contract requires it to run that repository's
+full Maven build before returning, and to report the command and the result it actually saw. You
+are not asked to re-run the same command by hand — you are asked to read two returns and judge
+whether they are consistent with each other and with the contracts.
 
-> **That is a real outcome, not a failed one.** Establishing that a repository is already correct,
-> with evidence, is engineering work. Some of the best returns you get today will contain no diff.
+If you want to audit an agent rather than trust it, re-run its command deliberately and say that is
+what you are doing. That is a different activity from mechanical repetition.
+
+> **A return with `FILES_CHANGED: none` is a real outcome, not a failed one.** Where a contract
+> declared `NO_DIFF_EXPECTED: true`, the job was to establish that the owned criteria are already
+> satisfied and show the evidence. Some of the best returns you get today will contain no diff.
 
 ### Expected return from each agent
 
@@ -739,8 +760,8 @@ Writes follow the rollout order you decided in Stage 3.
 ### ✓ Done when
 
 ```
-  [ ] both repositories pass mvn verify on their own
-  [ ] every changed file traces to an acceptance criterion you can name
+  [ ] both returns carry a verification command AND the result the agent observed
+  [ ] every changed file traces to a criterion its contract owns
   [ ] no agent was given both repositories
   [ ] nothing out of scope was implemented — and where you refused, you wrote down why
 ```

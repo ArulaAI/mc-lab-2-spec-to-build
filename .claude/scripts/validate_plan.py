@@ -121,6 +121,45 @@ def validate(root: pathlib.Path) -> list[Check]:
                         "none" if not tasked
                         else "planned as work rather than left open: " + ", ".join(tasked)))
 
+    # ---- Acceptance-criteria ownership -------------------------------------------------------
+    # Stage 3's contracts are the canonical per-repository AC split. Stage 5 judges each repository
+    # against its own criteria, so if the split is missing or incomplete there is nothing for one
+    # of the two validators to judge, and the second validator quietly becomes a no-op.
+    spec_text = read(root, "specs/refund-seam-phase1.spec.md") or ""
+    spec_acs = set(re.findall(r"\bAC-\d+\b", spec_text))
+    owned: dict[str, set[str]] = {}
+    for repo, rel in BRIEFS.items():
+        text = read(root, rel) or ""
+        section = re.search(r"Acceptance criteria owned:?(.*?)(?:\n#{1,3} |\nNO_DIFF_EXPECTED|\Z)",
+                            text, re.S | re.IGNORECASE)
+        owned[repo] = set(re.findall(r"\bAC-\d+\b", section.group(1))) if section else set()
+
+    assigned = set().union(*owned.values()) if owned else set()
+    if spec_acs:
+        uncovered = sorted(spec_acs - assigned)
+        checks.append(Check("every acceptance criterion is owned by a contract", not uncovered,
+                            "all covered" if not uncovered
+                            else "no contract owns: " + ", ".join(uncovered)))
+
+        unknown = sorted(assigned - spec_acs)
+        checks.append(Check("no contract references an unknown criterion", not unknown,
+                            "none" if not unknown
+                            else "not in the validated specification: " + ", ".join(unknown)))
+
+        empty = sorted(r for r, a in owned.items() if not a)
+        checks.append(Check("each repository contract owns at least one criterion", not empty,
+                            "both own criteria" if not empty
+                            else "owns none: " + ", ".join(empty)
+                                 + " -- a repository with no criteria leaves its Stage 5 validator "
+                                   "nothing to judge. Expecting no code change is NO_DIFF_EXPECTED, "
+                                   "which is a different statement"))
+
+        undeclared = sorted(r for r, rel in BRIEFS.items()
+                            if "NO_DIFF_EXPECTED" not in (read(root, rel) or ""))
+        checks.append(Check("each contract declares its diff expectation", not undeclared,
+                            "both declare NO_DIFF_EXPECTED" if not undeclared
+                            else "missing NO_DIFF_EXPECTED: " + ", ".join(undeclared)))
+
     for repo, rel in BRIEFS.items():
         brief = read(root, rel)
         if brief is None:
@@ -175,7 +214,8 @@ def self_test() -> int:
         (root / "docs/plans").mkdir(parents=True)
         (root / "docs/agent-briefs").mkdir(parents=True)
         (root / "specs").mkdir(parents=True)
-        (root / "specs/refund-seam-phase1.spec.md").write_text("| OQ-1 | derivation | Open |")
+        (root / "specs/refund-seam-phase1.spec.md").write_text(
+            "| OQ-1 | derivation | Open |\nAC-1 AC-2 AC-3 AC-4 AC-5\n")
         (root / "docs/plans/orchestration-plan.md").write_text("""# Orchestration plan
 
 Work is split across pgs-tta and pgs-payment-processor.
@@ -200,7 +240,8 @@ OQ-1 remains open and is escalated, not answered.
 ## Excluded areas
 ## Tools allowed
 ## Acceptance criteria owned
-AC-1
+AC-1 AC-2 AC-3 AC-4 AC-5
+NO_DIFF_EXPECTED: false
 ## Dependencies on the other repository
 ## Expected return shape
 ## Stop conditions
@@ -210,6 +251,24 @@ Stop and report if the specification is silent.
         failing = [c.name for c in checks if not c.passed]
         results.append(("a complete plan is accepted", not failing,
                         "all checks pass" if not failing else "failing: " + "; ".join(failing)))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = pathlib.Path(tmp)
+        (root / "docs/plans").mkdir(parents=True); (root / "docs/agent-briefs").mkdir(parents=True)
+        (root / "specs").mkdir(parents=True)
+        (root / "specs/refund-seam-phase1.spec.md").write_text("AC-1 AC-2 AC-3\n")
+        (root / "docs/plans/orchestration-plan.md").write_text(
+            "pgs-tta and pgs-payment-processor. AC-1 AC-2 AC-3. Rollout order: producer, because "
+            "additive. Pair verification demonstrates compatibility.\n")
+        for rel in BRIEFS.values():
+            (root / rel).write_text("## Outcome\n## Authoritative inputs\n## Repository scope\n"
+                                    "## Allowed areas\n## Excluded areas\n## Tools allowed\n"
+                                    "## Acceptance criteria owned\nAC-1\nNO_DIFF_EXPECTED: false\n"
+                                    "## Expected return shape\n## Stop conditions\nStop.\n")
+        names = [c.name for c in validate(root) if not c.passed]
+        results.append(("an uncovered acceptance criterion is refused",
+                        "every acceptance criterion is owned by a contract" in names,
+                        f"AC-2/AC-3 unowned -> {len(names)} failing check(s)"))
 
     ok = True
     for label, passed, detail in results:

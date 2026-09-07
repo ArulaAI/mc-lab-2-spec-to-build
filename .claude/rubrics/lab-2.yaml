@@ -102,7 +102,7 @@ criteria:
   - id: plan-agent-briefs
     description: "Both implementation briefs exist and bound their agent"
     max_score: 8
-    check: "all_of:file_contains:docs/agent-briefs/tta-implementation-brief.md:Stop;file_contains:docs/agent-briefs/processor-implementation-brief.md:Stop"
+    check: "all_of:file_contains:docs/agent-briefs/tta-implementation-brief.md:Acceptance criteria owned;file_contains:docs/agent-briefs/processor-implementation-brief.md:Acceptance criteria owned"
 
   # ------------------------------------------------------------------------------- build (20)
   - id: build-void-resisted
@@ -115,10 +115,19 @@ criteria:
     max_score: 7
     check: "file_contains:docs/pair-result.txt:GREEN"
 
-  - id: build-work-committed
-    description: "Implementation work exists in both service repositories"
-    max_score: 5
-    check: "all_of:repo_changed:pgs-tta;repo_changed:pgs-payment-processor"
+  - id: build-work-declared
+    description: "Each repository's diff expectation was declared deliberately in its contract"
+    max_score: 2
+    check: "all_of:file_contains:docs/agent-briefs/tta-implementation-brief.md:NO_DIFF_EXPECTED;file_contains:docs/agent-briefs/processor-implementation-brief.md:NO_DIFF_EXPECTED"
+
+  - id: build-work-present
+    description: "Implementation work exists in at least one repository"
+    max_score: 3
+    # any_of, not all_of: one repository may legitimately need no change, and a participant who
+    # establishes that with evidence is right rather than idle. Neither repository is named as the
+    # required one -- this file is participant-readable, and naming it would encode where the
+    # defects are.
+    check: "any_of:repo_changed:pgs-tta;repo_changed:pgs-payment-processor"
 
   # ----------------------------------------------------------------- independent validation (10)
   - id: validation-brief-generated

@@ -299,35 +299,57 @@ a disagreement can only appear when two independent accounts are laid side by si
 
 Write them down before you dispatch it.
 
-### The facilitator demonstrates — briefing the first auditor
+### The facilitator demonstrates — the repo-brief pattern
 
 The `repo-auditor` agent already exists at `.claude/agents/repo-auditor.md`. **The capability is
-standardised; the brief is yours.** Watch what the brief pins down:
+standardised; the brief is yours.** The facilitator walks through the pattern **without launching
+anything** — you launch both, together, in a moment.
+
+What a brief has to pin down:
 
 ```
-   ▸ which repository — and that it may read nothing else
-   ▸ what to inspect: entry points, contract artifacts and versions, outbound
+   the absolute repository root, and that globs and greps are rooted there
+   what to inspect: entry points, contract artifacts and versions, outbound
      calls, business rules, boundary validations, error mappings, idempotency,
      correlation, tests
-   ▸ that every claim cites a file, and a line where one applies
-   ▸ that anything needing the other repository goes under UNKNOWNS, not a guess
-   ▸ that it must report what the source requires and the repo does NOT do —
+   that every claim cites a file, and a line where one applies
+   that anything needing the other repository goes under UNKNOWNS, not a guess
+   that it must report what the source requires and the repo does NOT do --
      absence from code is not absence from authority
-   ▸ the exact return headings, so two returns can be COMPARED, not just read
+   the six required return headings, verbatim
 ```
 
-That last one is quietly the most important. Identical structure is what turns two reports into
-one comparison.
+Two of those are load-bearing for reasons that are not obvious.
 
-### ▶ Your turn — brief the second auditor
+**The absolute root.** The agent has Read, Glob and Grep. A broad glob will happily return matches
+from outside the repository you meant. Scope has to come from the brief; the tooling will not
+supply it.
 
-Write the brief for the other repository yourself.
+**The six headings, in the brief itself.** The agent returns whatever shape the brief asks for — it
+does not enforce its own. Ask for the wrong shape and you get the wrong shape, politely.
 
-Same return shape — that is what makes them comparable. But the things worth inspecting are not
-identical on both sides of a seam: one side **translates and calls**, the other **decides and
-records**. A brief that treats them as mirror images will miss what is specific to each.
+```
+REPOSITORY:      CONTRADICTIONS:
+CLAIMS:          UNKNOWNS:
+EVIDENCE:        STOP_REQUIRED:
+```
 
-Both auditors can run at once. They only read, so there is nothing to serialise.
+### ▶ Your turn — write both briefs, then launch both at once
+
+Write both repo briefs yourself. Same return shape, because that is what makes two reports into one
+comparison. But the two sides are not mirror images: one **translates and calls**, the other
+**decides and records**, so what is worth inspecting differs.
+
+Then dispatch **both auditors in a single action**, before reading either result.
+
+That ordering is the whole technique. Launch one, read it, then brief the second and you have
+contaminated the second brief with the first agent's conclusions — and you will not be able to tell
+which of its findings were independent. Two agents launched blind to each other produce two
+accounts that can genuinely disagree.
+
+**⌂ You'll see** — two returns, each naming its own repository, each with its own `UNKNOWNS`. A
+return that answers a question about the *other* repository is a finding about your brief, not a
+gift: it means the scope did not hold.
 
 ### Then the real work — reconcile
 
@@ -349,6 +371,25 @@ That example is deliberately not telling you what the claim is, and it is not a 
 that points at nothing is worse than no citation, because it looks like work. A row with three
 empty cells is a note to yourself, not a finding, and the grader counts populated cells for
 exactly that reason.
+
+### The rulings are yours — and only yours
+
+The auditors return claims and evidence. **They do not touch this file.** Nothing is written into
+the ledger until both returns exist and you have ruled, and the `Human ruling` column is never
+filled in on your behalf.
+
+Two questions decide what goes in it. They are the same for everyone in the room, and they are
+asked once both returns are on the table:
+
+> **DG-01** — The two audits disagree about at least one behaviour at the seam. For each
+> disagreement, which repository is authoritative, and what is your evidence for that ruling?
+>
+> **DG-02** — Which of the auditors' unknowns can be settled from the material you have, and which
+> stay `UNKNOWN`?
+
+If answering either one would require authority nobody has, that is not a stalemate to break with
+a reasonable guess. Say so, record what is missing, and move on — the specification has an Open
+questions section for exactly this.
 
 This part is yours, not the agents'. Three things to be deliberate about:
 
@@ -481,7 +522,20 @@ labelled lab representation. Nothing gets invented into existence.
 
 ### Human gate before you move on
 
-Read your hardened specification once more and ask one question:
+Two fixed questions close this stage. Same wording for everyone, asked once the gate reports
+READY so the criteria are stable:
+
+> **DG-03** — For each open question the specification carries, does the supplied source material
+> answer it? Name the source you checked, and say what you are recording.
+>
+> **DG-04** — Which acceptance criteria need evidence from both repositories, and which belong to
+> exactly one?
+
+DG-04 is not bookkeeping. That assignment becomes the `Acceptance criteria owned` field in each
+Stage 3 contract, and it is what lets Stage 5 judge each repository against its own criteria
+instead of reviewing one combined diff.
+
+Then read your hardened specification once more and ask:
 
 > **Did we invent any PGS behaviour to get here?**
 

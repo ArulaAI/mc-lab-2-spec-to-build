@@ -1,0 +1,60 @@
+# Decision gates -- the only questions Claude may ask a participant on the core path.
+#
+# Why this file exists
+# --------------------
+# Dry runs produced a different set of model-generated questions every time, for decisions that
+# carry real authority. Variation in engineering reasoning is the point of this lab; variation in
+# which decisions a participant is asked to make is not. These questions are lab-authored, asked
+# verbatim, and identical for everyone.
+#
+# Rules for the parent session
+# ----------------------------
+#   - Ask only the gates listed here, at the stage listed, using the exact `question` text.
+#   - Ask a gate only once `evidence_required` exists. Asking earlier invites a guess.
+#   - Do not offer multiple-choice alternatives, and do not add follow-ups because another
+#     answer would be interesting.
+#   - "Continue?" and "Does this look right?" are not decisions. Never ask them.
+#   - If a gate cannot be answered because a required authority is missing, do not improvise:
+#     emit the STOP_REQUIRED block below and stop.
+#
+# A gate earns its place only if it maps to a human-authority decision, changes what the
+# participant does next, does not duplicate a deterministic validator result, and is asked after
+# the evidence needed to answer it exists.
+
+stop_required_format: |
+  STOP_REQUIRED
+  MISSING_AUTHORITY: <the document or evidence that would settle this>
+  WHY_IT_BLOCKS: <what cannot proceed, and why guessing would be a business decision>
+
+gates:
+  - id: DG-01
+    stage: 1
+    question: "The two audits disagree about at least one behaviour at the seam. For each disagreement, which repository is authoritative, and what is your evidence for that ruling?"
+    response: free_text
+    evidence_required: "both repo-auditor returns are present, and each identifies its repository"
+    changes_next: "the ruling is written into the Human ruling column and decides which side changes"
+    on_missing_authority: STOP_REQUIRED
+
+  - id: DG-02
+    stage: 1
+    question: "Which of the auditors' unknowns can be settled from the material you have, and which stay UNKNOWN?"
+    response: free_text
+    evidence_required: "both repo-auditor returns are present and their UNKNOWNS sections have been read"
+    changes_next: "settled items become ledger rows with evidence; the rest stay UNKNOWN and are carried into the specification's open questions"
+    on_missing_authority: STOP_REQUIRED
+
+  - id: DG-03
+    stage: 2
+    question: "For each open question the specification carries, does the supplied source material answer it? Name the source you checked, and say what you are recording."
+    response: free_text
+    evidence_required: "the specification's Open questions section has been read alongside docs/PGS_DECISIONS.md"
+    changes_next: "an answered question is closed with a citation; an unanswered one stays open and is not filled in"
+    on_missing_authority: STOP_REQUIRED
+
+  - id: DG-04
+    stage: 2
+    question: "Which acceptance criteria need evidence from both repositories, and which belong to exactly one?"
+    response: free_text
+    evidence_required: "the specification reports READY, so the acceptance criteria are stable"
+    changes_next: "this assignment becomes the Acceptance criteria owned field in each Stage 3 agent contract, and the per-repository input to Stage 5's validators"
+    on_missing_authority: STOP_REQUIRED

@@ -39,6 +39,27 @@ about the domain.
 6. **Pair-level evidence before completion.** Two green repositories are not evidence the seam is
    correct. `python3 scripts/run_pair_verification.py` is what settles that question.
 
+## Questions you may ask
+
+The only questions to put to the coordinating engineer on the core path are the decision gates in
+`.claude/decision-gates.yaml`. Ask them at the stage listed, in the exact wording given, and only
+once the evidence that gate names actually exists.
+
+Do not generate alternatives, do not offer multiple choice, and do not add a follow-up because
+another answer would be useful. "Continue?" and "does this look right?" are not decisions and must
+never be asked.
+
+If a required authority is missing, do not improvise a reasonable-sounding answer. Emit:
+
+```
+STOP_REQUIRED
+MISSING_AUTHORITY: <the document or evidence that would settle this>
+WHY_IT_BLOCKS: <what cannot proceed, and why guessing would be a business decision>
+```
+
+and stop. In a payment path, an invented threshold or default is a business decision made by
+something with no authority to make it.
+
 ## Authority, in order
 
 | Document | Answers |

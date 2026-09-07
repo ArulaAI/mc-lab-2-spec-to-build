@@ -141,7 +141,7 @@ Sources referenced: `pgs-lab-spec-pack.md` Spec 1 (*Support Refunds for S2I tran
 | 10.1 | APIs are contract-first; the OpenAPI document is the source of truth and a non-breaking change updates the spec rather than forking a version | `pgs-example-claude-md-for-labs.md`, "APIs" | `PGS FACT` |
 | 10.2 | Production deployments are incremental, reversible and version-tolerant across instances | `pgs-epic-feature-story-examples.md`, "Controlled Production Deployments" | `PGS FACT` |
 | 10.3 | The lab contract version numbers (`v1`, `v2`) and the specific additive delta between them are a lab construct | Lab construct | **`LAB REPRESENTATION`** |
-| 10.4 | The rollout order derived in this lab belongs to the specific additive change represented here. **Producer-first is not presented as a universal PGS rule.** | Scenario Document §8 | `PGS FACT` (principle) |
+| 10.4 | A safe rollout order is a property of the specific change being deployed, not a standing rule. Whatever order this lab's compatibility evidence supports applies to the additive change represented here and is **not** presented as a universal PGS deployment rule. | Scenario Document §8 | `PGS FACT` (principle) |
 
 ---
 
@@ -172,4 +172,4 @@ encoded an unresolved question as production fact, which is a hard-fail conditio
 
 | Date | Change |
 |---|---|
-| 2026-09-04 | Initial register. Phase A. SEED-05 endpoint mapping recorded and gated; SEED-06 candidate testing completed. |
+| 2026-09-04 | Initial register. Endpoint mapping recorded against source; candidate behaviours reviewed for grounding, and those that could not be traced were left out rather than represented. |

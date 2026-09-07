@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# gate-python -- interpreter launcher for Lab 2's *blocking* PreToolUse gate.
+#
+# Why this exists alongside Workbench's run-python
+# ------------------------------------------------
+# Workbench owns the project-local Python cache convention, and this script deliberately conforms
+# to it rather than inventing a second one: same file, same discovery order. What it adds is the
+# one behaviour a blocking gate needs and an advisory launcher must not have.
+#
+#   Workbench's run-python fails OPEN. That is correct for its consumers -- journey_record.py and
+#   quality_gates.py are advisory, and a missing interpreter should never stop a session for them.
+#
+#   gate_guard.py is a control. If it cannot run, writes to protected paths must be REFUSED, not
+#   waved through. A control that disables itself when its dependency is missing is not a control.
+#
+# Two concrete gaps this closes:
+#
+#   1. A *stale* cache. run-python guards on `[ -f ] && [ -s ]`, so a cache pointing at an
+#      interpreter that no longer exists is treated as valid and `exec` fails with 126/127. That
+#      is not 2, so the harness sees no block and the gate is silently off. This script validates
+#      by actually running the interpreter, which also avoids the Windows path-format problems
+#      that a bare `[ -x ]` test runs into under Git Bash.
+#
+#   2. No interpreter at all. Rather than exiting non-zero and letting the write through, this
+#      emits gate_guard's own deny contract -- structured JSON plus exit 2 -- and names the fix.
+#
+# Nothing here assumes Workbench's SessionStart resolver has run. If it has, its cache is reused.
+# If it has not, this populates the same cache, and Workbench benefits from that in turn.
+
+SELF="${BASH_SOURCE[0]}"
+
+# --self-test exercises every cache state plus the fail-closed path. M12 was a gate that stopped
+# running without saying so, which is the one failure a hook cannot self-report -- so it gets a
+# test rather than a comment.
+if [ "${1:-}" = "--self-test" ]; then
+  T=$(mktemp -d) || exit 1
+  trap 'rm -rf "$T"' EXIT
+  mkdir -p "$T/.claude/hooks"
+  cp "$SELF" "$T/.claude/hooks/gate-python"
+  printf 'print("ran")\n' > "$T/.claude/hooks/probe.py"
+  CF="$T/.claude/hooks/.python_path"
+  mkdir -p "$T/shadow"
+  for n in py python python3; do printf '#!/bin/sh\nexit 1\n' > "$T/shadow/$n"; chmod +x "$T/shadow/$n"; done
+
+  pass=0; fail=0
+  check() { # name expected_rc actual_rc
+    if [ "$2" = "$3" ]; then printf '  ok    %s (rc=%s)\n' "$1" "$3"; pass=$((pass+1));
+    else printf '  FAIL  %s (want rc=%s, got %s)\n' "$1" "$2" "$3"; fail=$((fail+1)); fi
+  }
+  invoke() { CLAUDE_PROJECT_DIR="$T" bash "$T/.claude/hooks/gate-python" "$T/.claude/hooks/probe.py" >/dev/null 2>&1; printf '%s' "$?"; }
+
+  rm -f "$CF";                          check "cache absent resolves"        0 "$(invoke)"
+  : > "$CF";                            check "cache empty resolves"         0 "$(invoke)"
+  printf '/nonexistent/python3' > "$CF"; check "cache STALE self-heals"       0 "$(invoke)"
+  check "stale cache was repaired" "yes" "$([ -s "$CF" ] && "$(cat "$CF")" -c pass >/dev/null 2>&1 && printf yes || printf no)"
+  check "valid cache reused"            0 "$(invoke)"
+
+  rm -f "$CF"
+  RC=$(PATH="$T/shadow:$PATH" CLAUDE_PROJECT_DIR="$T" bash "$T/.claude/hooks/gate-python" "$T/.claude/hooks/probe.py" >"$T/out" 2>"$T/err"; printf '%s' "$?")
+  check "no interpreter FAILS CLOSED"   2 "$RC"
+  if grep -q '"permissionDecision":"deny"' "$T/out"; then
+    printf '  ok    deny contract on stdout\n'; pass=$((pass+1))
+  else printf '  FAIL  deny contract missing from stdout\n'; fail=$((fail+1)); fi
+  if grep -q 'verify_setup.py' "$T/err"; then
+    printf '  ok    stderr names the fix\n'; pass=$((pass+1))
+  else printf '  FAIL  stderr does not name the fix\n'; fail=$((fail+1)); fi
+  if [ ! -s "$CF" ]; then printf '  ok    cache not corrupted on failure\n'; pass=$((pass+1));
+  else printf '  FAIL  cache written despite failure\n'; fail=$((fail+1)); fi
+
+  printf '\ngate-python self-test: %s passed, %s failed\n' "$pass" "$fail"
+  [ "$fail" -eq 0 ] || exit 1
+  exit 0
+fi
+
+CACHE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/.python_path"
+
+# Usable means "it runs and it is new enough" -- not "a file exists at this path".
+usable() {
+  [ -n "${1:-}" ] || return 1
+  "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1
+}
+
+# Discovery order matches Workbench's resolve-python exactly, so the two cannot disagree about
+# which interpreter this project uses.
+resolve() {
+  local P
+  if   P=$(py -3 -c 'import sys;print(sys.executable)' 2>/dev/null) && [ -n "$P" ]; then printf '%s' "$P"; return 0
+  elif P=$(python3 -c 'import sys;print(sys.executable)' 2>/dev/null) && [ -n "$P" ]; then printf '%s' "$P"; return 0
+  elif P=$(python -c 'import sys;sys.version_info>=(3,8) or sys.exit(1);print(sys.executable)' 2>/dev/null) && [ -n "$P" ]; then printf '%s' "$P"; return 0
+  fi
+  return 1
+}
+
+PY=""
+
+if [ -f "$CACHE_FILE" ] && [ -s "$CACHE_FILE" ]; then
+  CACHED=$(cat "$CACHE_FILE" 2>/dev/null || printf '')
+  if usable "$CACHED"; then
+    PY="$CACHED"
+  fi
+fi
+
+if [ -z "$PY" ]; then
+  if FRESH=$(resolve) && usable "$FRESH"; then
+    PY="$FRESH"
+    mkdir -p "$(dirname "$CACHE_FILE")" 2>/dev/null || true
+    printf '%s' "$PY" > "$CACHE_FILE" 2>/dev/null || true
+  fi
+fi
+
+if [ -z "$PY" ]; then
+  # Fail CLOSED. Emit the same contract gate_guard.py emits for a denied write, so the harness
+  # blocks on exit 2 and the participant is told what to do rather than left with a silent hole.
+  REASON="gate_guard: refusing this write because the lab's write gate cannot run.
+
+No Python 3.8+ interpreter could be found, so the deny list cannot be evaluated. The gate fails
+closed on purpose: allowing writes while the control is unavailable would leave the harness, the
+out-of-scope and non-negotiables documents and the grading fixtures unprotected without saying so.
+
+Fix it by running setup, which resolves and caches the interpreter for every lab hook:
+
+    python3 scripts/verify_setup.py
+
+If python3 is not on PATH at all, install Python 3.9+ (https://python.org) and run that again.
+Reading protected files is unaffected; only writes are refused."
+
+  # JSON built with bash parameter expansion only. The fail-closed path must not depend on sed or
+  # awk: the environment it exists to handle is a degraded one, and a JSON escaper that needs two
+  # more binaries to work is a poor bet in exactly that situation. Exit 2 is what blocks; this
+  # structured line is for harnesses that prefer it.
+  ONELINE="gate_guard: refusing this write because the lab write gate cannot run. No Python 3.8+ interpreter was found, so the deny list cannot be evaluated. Run: python3 scripts/verify_setup.py"
+  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"%s"}}\n' "${ONELINE//\"/\\\"}"
+  printf '%s\n' "$REASON" >&2
+  exit 2
+fi
+
+exec "$PY" "$@"

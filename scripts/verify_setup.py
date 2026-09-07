@@ -21,6 +21,7 @@ dependencies, and a room of thirty people discovering that at minute three loses
 from __future__ import annotations
 
 import argparse
+import os
 import pathlib
 import re
 import shutil
@@ -96,6 +97,13 @@ def check_workspace(r: Result) -> None:
     passed = "0 failed" in gate.stdout
     r.check("write gate self-test", passed,
             gate.stdout.strip().splitlines()[-1] if gate.stdout else "did not run")
+
+    # The gate is only a control if it actually runs. Its launcher is what guarantees that, so it
+    # is tested here too -- including that a missing interpreter refuses the write rather than
+    # quietly allowing it.
+    launcher = run(["bash", str(ROOT / ".claude/hooks/gate-python"), "--self-test"])
+    r.check("gate launcher self-test", "0 failed" in launcher.stdout,
+            launcher.stdout.strip().splitlines()[-1] if launcher.stdout else "did not run")
 
 
 def existing_work(service: pathlib.Path) -> bool:
@@ -207,11 +215,18 @@ def main() -> int:
     check_workspace(r)
 
     if not args.check:
-        # Cache the Python path so the gate-guard hook can find it on any platform.
+        # Populate the interpreter cache by driving the launcher, rather than writing the file
+        # here. There is one resolver for this project and this is not it: writing the cache
+        # directly would make setup a third writer alongside Workbench's resolve-python and the
+        # gate's own launcher, and three writers of one file disagree eventually.
+        launcher = ROOT / ".claude" / "hooks" / "gate-python"
         py_cache = ROOT / ".claude" / "hooks" / ".python_path"
-        py_cache.write_text(sys.executable, encoding="utf-8")
-        r.check("python path cache", py_cache.is_file(),
-                f"wrote {sys.executable}")
+        probe = subprocess.run(["bash", str(launcher), "-c", "import sys; print(sys.executable)"],
+                               cwd=ROOT, capture_output=True, text=True,
+                               env={**os.environ, "CLAUDE_PROJECT_DIR": str(ROOT)})
+        cached = py_cache.read_text(encoding="utf-8").strip() if py_cache.is_file() else ""
+        r.check("python resolved for hooks", probe.returncode == 0 and bool(cached),
+                f"cached {cached}" if cached else "the write gate could not resolve an interpreter")
 
         create_repos(r, reset=args.reset)
         confirm_state(r)

@@ -1,0 +1,3 @@
+# Force LF line endings on all platforms so that SHA-256 hashes, regex matching,
+# and test fixtures produce identical results on macOS and Windows.
+* text=auto eol=lf

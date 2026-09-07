@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import pathlib
+import shutil
 import subprocess
 import sys
 
@@ -106,7 +107,7 @@ def main() -> int:
         path = root / rel
         parts.append(f"## {title}\n\n*Source: `{rel}`*\n")
         if path.is_file():
-            content = path.read_text().strip()
+            content = path.read_text(encoding="utf-8").strip()
             parts.append(fence(content, "json" if rel.endswith(".json") else "markdown"))
         else:
             missing.append(rel)
@@ -133,7 +134,8 @@ def main() -> int:
     parts.append("## Deterministic pair-verification result\n")
     parts.append("*Source: `scripts/run_pair_verification.py`*\n")
     harness = root / "lab-harness" / "pair-verification"
-    result = subprocess.run(["mvn", "-B", "clean", "verify"], cwd=harness,
+    mvn = shutil.which("mvn") or "mvn"
+    result = subprocess.run([mvn, "-B", "clean", "verify"], cwd=harness,
                             capture_output=True, text=True)
     summary = [ln for ln in result.stdout.splitlines()
                if "Tests run:" in ln or "BUILD SUCCESS" in ln or "BUILD FAILURE" in ln]
@@ -152,7 +154,7 @@ def main() -> int:
         print("all sources present")
         return 0
 
-    (root / OUTPUT).write_text(brief)
+    (root / OUTPUT).write_text(brief, encoding="utf-8")
     print(f"wrote {OUTPUT}  ({len(brief.splitlines())} lines)")
     if missing:
         print("\nassembled with missing sources:")

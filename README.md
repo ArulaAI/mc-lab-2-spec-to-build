@@ -43,6 +43,7 @@ inside either one — which is why the central fact of the lab is:
   `code-to-spec-validator`
 - A warm `~/.m2`. The lab makes no network calls at runtime, but a first Maven build on a cold
   cache resolves dependencies like any other.
+- **A bash-compatible shell.** All terminal commands in this lab assume bash (Git Bash on Windows).
 
 ## Setup — before session day, not during it
 

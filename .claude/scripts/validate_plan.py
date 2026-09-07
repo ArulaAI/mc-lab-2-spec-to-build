@@ -58,7 +58,7 @@ class Check:
 
 def read(root: pathlib.Path, rel: str) -> str | None:
     p = root / rel
-    return p.read_text() if p.is_file() else None
+    return p.read_text(encoding="utf-8") if p.is_file() else None
 
 
 def validate(root: pathlib.Path) -> list[Check]:
@@ -153,7 +153,7 @@ def write_status(root: pathlib.Path, checks: list[Check]) -> dict:
                 "whether ownership was assigned to the right service, remain human rulings.",
     }
     (root / STATUS_PATH).parent.mkdir(parents=True, exist_ok=True)
-    (root / STATUS_PATH).write_text(json.dumps(status, indent=2) + "\n")
+    (root / STATUS_PATH).write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
     return status
 
 

@@ -82,7 +82,7 @@ def check_protected_paths(findings: list[Finding]) -> None:
         baseline_file = ROOT / ".claude/fixtures/protected-files.json"
         if not baseline_file.is_file():
             continue
-        baselines = json.loads(baseline_file.read_text()).get("files", {})
+        baselines = json.loads(baseline_file.read_text(encoding="utf-8")).get("files", {})
         for tracked, expected in baselines.items():
             if not tracked.startswith(rel.rstrip("/")):
                 continue
@@ -112,7 +112,7 @@ def check_repo(repo_name: str, findings: list[Finding]) -> None:
                                     "a test that shipped with the starter no longer exists"))
 
     for path in test_files(repo):
-        rel = f"{repo_name}/{path.relative_to(repo)}"
+        rel = f"{repo_name}/{path.relative_to(repo).as_posix()}"
         text = path.read_text(encoding="utf-8", errors="replace")
 
         if DISABLED.search(text):
@@ -137,7 +137,7 @@ def check_repo(repo_name: str, findings: list[Finding]) -> None:
 
     # Build configuration that skips the tests it is supposed to run.
     pom = repo / "pom.xml"
-    if pom.is_file() and SKIP_FLAGS.search(pom.read_text()):
+    if pom.is_file() and SKIP_FLAGS.search(pom.read_text(encoding="utf-8")):
         findings.append(Finding("tests-skipped-in-build", f"{repo_name}/pom.xml",
                                 "the build configuration skips tests"))
 

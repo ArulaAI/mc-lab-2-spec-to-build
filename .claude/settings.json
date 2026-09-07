@@ -10,7 +10,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/gate_guard.py\"",
+            "command": "\"$(cat \"$CLAUDE_PROJECT_DIR/.claude/hooks/.python_path\")\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/gate_guard.py\"",
             "timeout": 10
           }
         ]

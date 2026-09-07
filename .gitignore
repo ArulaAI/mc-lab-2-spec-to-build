@@ -16,6 +16,9 @@ journey/
 # Facilitator-only files — not distributed to participants
 /facilitator_script.md
 
+# Machine-specific Python path cache (created by verify_setup.py)
+.claude/hooks/.python_path
+
 # Python cache
 __pycache__/
 

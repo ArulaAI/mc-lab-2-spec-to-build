@@ -232,14 +232,14 @@ def write_status(root: pathlib.Path, checks: list[Check]) -> dict:
         "note": "Structural readiness only. This gate cannot determine whether the specification "
                 "is correct about the domain, and does not attempt to.",
     }
-    (root / STATUS_PATH).write_text(json.dumps(status, indent=2) + "\n")
+    (root / STATUS_PATH).write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
     return status
 
 
 def self_test() -> int:
     """A draft must fail and a hardened spec must pass, or the gate is decorative."""
     here = pathlib.Path(__file__).resolve().parents[2]
-    draft = (here / SPEC_PATH).read_text()
+    draft = (here / SPEC_PATH).read_text(encoding="utf-8")
 
     results = []
     draft_checks = validate(draft)
@@ -304,7 +304,7 @@ def main() -> int:
         print(f"specification not found at {SPEC_PATH}", file=sys.stderr)
         return 2
 
-    checks = validate(spec_file.read_text())
+    checks = validate(spec_file.read_text(encoding="utf-8"))
     print(f"specification: {SPEC_PATH}\n")
     print(render(checks))
     status = write_status(root, checks)

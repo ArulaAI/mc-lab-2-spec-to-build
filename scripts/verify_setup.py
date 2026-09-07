@@ -146,18 +146,23 @@ def create_repos(r: Result, reset: bool) -> None:
                 f"initialised, one starter commit at {head}")
 
 
+def _mvn() -> str:
+    return shutil.which("mvn") or "mvn"
+
+
 def confirm_state(r: Result) -> None:
     print("\nexpected starting state (this also warms the Maven cache)")
+    mvn = _mvn()
     for name in SERVICES:
-        result = run(["mvn", "-B", "clean", "verify"], cwd=ROOT / name)
+        result = run([mvn, "-B", "clean", "verify"], cwd=ROOT / name)
         r.check(name, result.returncode == 0,
                 "GREEN" if result.returncode == 0 else "RED -- each repository must build on its own")
 
     for name in SERVICES:
-        run(["mvn", "-B", "-q", "install", "-DskipTests"], cwd=ROOT / name)
+        run([mvn, "-B", "-q", "install", "-DskipTests"], cwd=ROOT / name)
 
     harness = ROOT / "lab-harness" / "pair-verification"
-    result = run(["mvn", "-B", "clean", "verify"], cwd=harness)
+    result = run([mvn, "-B", "clean", "verify"], cwd=harness)
     red = result.returncode != 0
     r.check("pair verification", red,
             "RED, as expected at the start" if red
@@ -202,6 +207,12 @@ def main() -> int:
     check_workspace(r)
 
     if not args.check:
+        # Cache the Python path so the gate-guard hook can find it on any platform.
+        py_cache = ROOT / ".claude" / "hooks" / ".python_path"
+        py_cache.write_text(sys.executable, encoding="utf-8")
+        r.check("python path cache", py_cache.is_file(),
+                f"wrote {sys.executable}")
+
         create_repos(r, reset=args.reset)
         confirm_state(r)
 

@@ -821,33 +821,44 @@ That third row is the interesting one. The test **passes by detecting the incomp
 is diagnostic, not permanently red. It is how the rollout order stops being an assertion
 somebody made and becomes something you can point at.
 
-### 2 · Then independent judgment
+### 2 · Then independent judgment — two validators, two briefs
 
 ```
 ⌘  python3 .claude/scripts/build_validator_brief.py
 ```
 
-The brief is assembled **mechanically** from an allowlist: the specification, both diffs, the
-ledger, the pair results, the plan, the scope documents.
+That writes **one brief per repository**. Each carries the specification, both scope documents,
+that repository's contract, its diff and its verification evidence — and none of the other
+repository's implementation.
 
-It contains no chat history and no builder rationale — **not because the script is careful about
-leaving them out, but because it has no way to reach them.** That is a structural guarantee rather
-than an instruction to be discreet, which is exactly why it is a script and not a prompt.
+Dispatch **two fresh validators in parallel**, one brief each. Each has read and test tools and
+**no write tools**, so neither can quietly repair what it finds. Neither saw your session, so
+neither can inherit your confidence in your own work.
 
-Dispatch the fresh `code-to-spec-validator` against it. It has read and test tools and **no write
-tools**, so it cannot quietly repair what it finds. It never saw your session, so it cannot
-inherit your confidence in your own work.
+**Why not one validator holding both diffs.** A reviewer given the whole change stops judging *this*
+repository against *its* criteria and starts reviewing the change as a whole — which is the pair
+harness's job, and the harness already answered it deterministically in step 1. Splitting the
+evidence is what keeps the two judgements independent, and it is why each contract had to own
+acceptance criteria back in Stage 3.
 
-> **Expect the validator to report FAIL even when the harness is green.** The validator works
-> from the diff — it can only see what *changed*. Any behaviour that was already correct before
-> you started is invisible to it, so it will report criteria as unmet that are in fact
-> satisfied by code you never touched.
->
-> That is not a bug in the validator; it is the cost of judging from a diff, and knowing it is
-> part of reading any review honestly. Where the validator and the harness disagree about a
-> criterion, the harness is the ground truth — it executes the behaviour, the validator only
-> reads the change. Disposition those as `PRE-EXISTING`, and say which harness test is your
-> evidence.
+**⌂ You'll see** — findings in this shape, from each validator:
+
+```
+REPOSITORY: <the repo that brief covered>
+AC:         <a criterion that repository's contract owns>
+VERDICT:    PASS | FAIL | UNVERIFIED
+FINDING:
+EVIDENCE:
+```
+
+Three verdicts, not two. **`UNVERIFIED` is a real answer** — it means the validator could not settle
+the criterion from what it was given, usually because judging it would require the other side. That
+is the correct outcome, not a softer way of saying FAIL, and treating it as a failure would teach
+exactly the guessing this lab exists to prevent.
+
+> **`FILES_CHANGED: none` is not automatically a failure.** Where a contract declared
+> `NO_DIFF_EXPECTED: true`, the question is whether the owned criteria were already satisfied. A
+> validator that marks that FAIL has judged the diff rather than the repository.
 
 ### 3 · Disposition every finding
 
@@ -862,11 +873,30 @@ In `docs/finding-dispositions.md`:
 > immaterial. Sorting them is the judgment this stage exists to build — and you are graded on the
 > disposition, **not** on agreeing with the validator.
 
-### 4 · If the harness is RED and findings are material — loop back
+### 4 · If something material is broken — the facilitator decides whether to repair
 
-Return to Stage 4: fix the defect, re-run `mvn verify`, then come back here and restart from
-step 1. Watch the harness count — if the number of failing tests goes down, you are converging.
-If it stays flat or the validator produces new material findings, something real is still broken.
+Core Stage 5 ends after the pair proof, the two validators, and your dispositions. **Remediation is
+not part of it.**
+
+If a finding is material and marked `FIX_NOW`, repair only when the room is on time *and* the
+facilitator opens the path. One targeted cycle, maximum:
+
+```
+  re-launch the implementer for that repository only, with its existing contract,
+  the finding, and the relevant pair evidence
+        │
+  it makes the targeted repair and runs that repository's verification
+        │
+  re-run the pair proof, then re-run only the affected repository's validator
+        │
+  update the disposition
+```
+
+Otherwise: record the finding, use the facilitator's checkpoint, and go to Stage 6 with it open.
+
+**An open finding you understood and recorded is a better outcome than a rushed fix you did not
+verify.** Stage 5 is the judgment anchor; it does not become a repair queue because Stage 4 ran
+long.
 
 **Reveal:** compare against Prediction #4.
 

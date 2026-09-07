@@ -131,9 +131,9 @@ criteria:
 
   # ----------------------------------------------------------------- independent validation (10)
   - id: validation-brief-generated
-    description: "The validator brief was assembled deterministically"
+    description: "Both repo-scoped validator briefs were assembled deterministically"
     max_score: 3
-    check: "file_contains:docs/validator-brief.md:Validator brief"
+    check: "all_of:file_contains:docs/validator-brief-tta.md:Validator brief;file_contains:docs/validator-brief-payment-processor.md:Validator brief"
 
   - id: validation-report-received
     description: "A fresh-context validator report exists with a verdict"

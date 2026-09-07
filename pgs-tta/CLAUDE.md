@@ -1,51 +1,47 @@
 # CLAUDE.md — pgs-tta
 
 The translation side of the represented refund seam. The workspace root `CLAUDE.md` applies here
-too; this file adds what is specific to this service.
+too; this file adds only what is specific to this service.
 
-## What this service is responsible for
+## Role
 
-- accepting the WSAPI-shaped refund request
-- validating the request **it** receives
-- mapping it onto the Payment Processor contract
-- propagating the retry identity it was given
-- calling Payment Processor and mapping the answer back
-- preserving the meaning of what comes back
+This service accepts the WSAPI-facing refund request, maps it onto the Payment Processor contract,
+calls that service, and maps the answer back to its caller.
 
-## What it is not responsible for
+## Where behaviour is defined
 
-**This service does not make authoritative refund-state decisions.** Anything that depends on
-stored order or transaction state — how much of an order remains refundable, whether a target
-transaction is refundable at all — belongs to Payment Processor, because that is where the state
-lives.
+Not here. This file carries engineering guardrails, not domain rules.
 
-Boundary validation here is legitimate and expected: every interface is a trust boundary, and this
-service validates what it receives. The line is between *validating the request* and *deciding the
-refund*. A domain rule independently re-encoded on both sides of a seam does not stay in step; the
-two services simply become able to disagree about the same refund, and nothing tells you when that
-starts.
+| Question | Answer lives in |
+|---|---|
+| What must this change do? | `specs/refund-seam-phase1.spec.md`, once it is READY |
+| Is a behaviour PGS fact, lab representation, or not modelled? | `docs/PGS_DECISIONS.md` |
+| What must never be built? | `specs/OUT_OF_SCOPE.md` |
+| What holds regardless of anything else? | `specs/NON_NEGOTIABLES.md` |
 
-## Contract handling
+If you cannot find a rule in those documents, that is a finding to record — not a gap to fill
+with something plausible.
 
-`src/main/openapi/payment-processor.yaml` is the Payment Processor contract this consumer is pinned
-to, and everything under `client/contract/` is generated from it:
+## Engineering guardrails
 
-```
-mvn -Pgenerate-client generate-sources
-```
+- **Layering holds.** Controller → Service → Repository. Controllers carry HTTP concerns only.
+- **Every interface is a trust boundary**, including a call from another internal service.
+  Validate what you receive; do not displace trust onto the caller.
+- **Nothing sensitive reaches a log.** No PAN, PII, key, credential, token or authorization code,
+  on any path. Do not add debug logging that prints a request, a response, or a card object.
+- **Configuration is externalised.** No hostname, URL or secret in source.
+- **Generated code is not edited by hand.** Anything under `client/contract/` is produced from
+  `src/main/openapi/payment-processor.yaml`:
 
-**Regenerate; do not hand-edit generated code.** A hand-patched client is a client that no longer
-matches any contract, and the next regeneration silently discards the patch. If the generated
-result is wrong, the contract or the generator configuration is what needs to change.
+  ```bash
+  mvn -Pgenerate-client generate-sources
+  ```
 
-## Things to preserve
+  A hand-patched client no longer matches any contract, and the next regeneration discards the
+  patch silently. If the generated result is wrong, the contract or the generator configuration is
+  what needs to change.
 
-- **The retry identity crosses unchanged**, on every path. Deriving, replacing or regenerating it
-  breaks end-to-end idempotency even though this service still looks correct on its own.
-- **Downstream failure semantics survive translation.** A duplicate answered with 409 must not
-  reach the caller as a generic 500: the caller would retry a request that was correctly refused.
-- **Correlation context propagates.**
+## Scope
 
-## Out of scope here
-
-No settlement artifacts. No Void behaviour. No dependency the source material does not establish.
+Work only inside the seam this lab represents. Code sitting next to the refund path is not
+authorisation to use it, and `specs/OUT_OF_SCOPE.md` is authoritative and write-protected.

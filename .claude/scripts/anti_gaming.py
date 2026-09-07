@@ -97,10 +97,13 @@ def check_protected_paths(findings: list[Finding]) -> None:
                                         "content differs from what shipped"))
 
 
-def check_repo(repo_name: str, findings: list[Finding]) -> None:
+def check_repo(repo_name: str, findings: list[Finding], setup_issues: list[str]) -> None:
     repo = ROOT / repo_name
     if not (repo / ".git").is_dir():
-        findings.append(Finding("repo-missing", repo_name, "not an initialised repository"))
+        # Not a finding. An un-initialised repository means setup has not run, which says nothing
+        # at all about whether anyone evaded anything -- and reporting it beside real evasion
+        # invites a facilitator to read "setup not done" as "something suspicious happened".
+        setup_issues.append(f"{repo_name} is not an initialised Git repository")
         return
 
     # Deleted test files, against the starter commit.
@@ -148,14 +151,33 @@ def main() -> int:
     args = ap.parse_args()
 
     findings: list[Finding] = []
+    setup_issues: list[str] = []
     check_protected_paths(findings)
     for service in SERVICES:
         if (ROOT / service).is_dir():
-            check_repo(service, findings)
+            check_repo(service, findings, setup_issues)
+        else:
+            setup_issues.append(f"{service} directory is missing")
 
     if args.json:
-        print(json.dumps([f.as_dict() for f in findings], indent=2))
-        return 1 if findings else 0
+        print(json.dumps({
+            "status": "SETUP_NOT_RUN" if setup_issues else ("FINDINGS" if findings else "CLEAN"),
+            "setup_issues": setup_issues,
+            "findings": [f.as_dict() for f in findings],
+        }, indent=2))
+        return 2 if setup_issues else (1 if findings else 0)
+
+    if setup_issues:
+        print("anti-gaming check\n")
+        print("  SETUP_NOT_RUN -- this check cannot draw a conclusion yet.\n")
+        for issue in setup_issues:
+            print(f"    - {issue}")
+        print()
+        print("  This is not a finding. Evasion is measured against each repository's starter")
+        print("  commit, and those commits do not exist until setup has run:\n")
+        print("      python3 scripts/verify_setup.py\n")
+        print("  Run that, then run this again.")
+        return 2
 
     print("anti-gaming check\n")
     if not findings:

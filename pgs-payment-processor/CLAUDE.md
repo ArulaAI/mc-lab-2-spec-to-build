@@ -1,38 +1,40 @@
 # CLAUDE.md — pgs-payment-processor
 
 The Payment Processor side of the represented refund seam. The workspace root `CLAUDE.md` applies
-here too; this file adds what is specific to this service.
+here too; this file adds only what is specific to this service.
 
-## What this service is responsible for
+## Role
 
-- exposing the represented refund API
-- the **authoritative** refund decisions in this slice, because they depend on state only this
-  service holds:
-  - how much of an order remains refundable, from the total captured amount less what has already
-    been refunded
-  - whether a refund targeting a specific capture fits within that capture's own amount
-  - whether this refund duplicates one already accepted
-- the represented online authorization step
-- returning correct response and error semantics
+This service exposes the represented refund API, decides refunds, and records them.
 
-## What it must never do
+## Where behaviour is defined
 
-- **Create a settlement artifact.** Settlement, injection, LCS and DCF are downstream and outside
-  this service. There is no exception to this.
-- **Hold WSAPI or TTA-specific logic.** This service knows about refunds, not about the shape of
-  the caller that happens to be in front of it today.
-- **Implement any Void flow.** Void-Auth, Void-Capture, Void-Pay and Void-Refund are all out of
-  scope. Code near the refund path that looks like it belongs to that work is not an invitation.
+Not here. This file carries engineering guardrails, not domain rules.
 
-## Idempotency
+| Question | Answer lives in |
+|---|---|
+| What must this change do? | `specs/refund-seam-phase1.spec.md`, once it is READY |
+| Is a behaviour PGS fact, lab representation, or not modelled? | `docs/PGS_DECISIONS.md` |
+| What must never be built? | `specs/OUT_OF_SCOPE.md` |
+| What holds regardless of anything else? | `specs/NON_NEGOTIABLES.md` |
 
-Deduplicate on the identity **as received**. Do not derive, normalise or reconstruct it: a service
-that deduplicates against an identity it invented for itself is not deduplicating anything the
-caller can rely on. If the identity arriving here looks wrong, that is a finding about the seam, to
-be raised — not repaired locally.
+If a rule is not in those documents, record the gap. Do not resolve it with a reasonable-looking
+default — in a payment path that is a business decision you are not authorised to make.
 
-## Error semantics
+## Engineering guardrails
 
-`200` processed, `400` validation failure, `409` duplicate, `500` system error. Responses to the
-caller are opaque: no stack traces, no internal class names, no field values. Business refusals are
-structured outcomes, not exceptions.
+- **Layering holds.** Controller → Service → Repository. Business refusals are structured
+  outcomes, not exceptions.
+- **Every interface is a trust boundary.** Validate every inbound request on its own merits.
+- **Nothing sensitive reaches a log.** No PAN, PII, key, credential, token or authorization code,
+  on any path.
+- **Responses to callers are opaque.** No stack traces, no internal class names, no field values.
+- **Configuration is externalised.** No hostname, URL or secret in source.
+- **This service knows about refunds, not about its caller.** Do not add logic that is specific to
+  the shape of whichever service happens to sit in front of it.
+
+## Scope
+
+Settlement, injection, LCS and DCF are downstream and outside this service. No Void flow is in
+scope. Code near the refund path that looks like it belongs to that work is not an invitation —
+`specs/OUT_OF_SCOPE.md` is authoritative and write-protected.

@@ -187,14 +187,18 @@ ambiguity.
 ⌘  /lab
 ```
 
-Then confirm a journey event actually landed in `.claude/journey/` — not merely that the command
+**Once `/lab` has run**, confirm a journey event actually landed — not merely that the command
 returned. A silent journey failure surfaces at Stage 6, which is far too late to fix it.
 
-**⌂ You'll see** — at least one `.jsonl` file, and it is not empty:
+The directory does not exist until `/lab` creates it, so run this *after* the command above, in a
+form that tells you which of the two situations you are in:
 
 ```bash
-ls -la .claude/journey/
+ls .claude/journey/*.jsonl 2>/dev/null || echo "no journey file yet - /lab did not start recording"
 ```
+
+**⌂ You'll see** — one or more `.jsonl` paths. If you get the fallback message instead, re-run
+`/lab` now rather than discovering it at Stage 6.
 
 ### 2 · Read the boundary
 
@@ -329,22 +333,22 @@ Both auditors can run at once. They only read, so there is nothing to serialise.
 
 In [`docs/context-ledger.md`](docs/context-ledger.md):
 
-```
-  │ Claim │ Asserted in │ Evidence │ Contradicted by │ Your ruling │ Status │
-```
+| Claim | Asserted in | Evidence | Contradicted by | Human ruling | Status |
+|---|---|---|---|---|---|
 
-**⌂ You'll see** — your wording will differ, but a row that has actually been reconciled carries
-weight in all six columns:
+**⌂ You'll see** — the *shape* of a reconciled row. The content is yours to find; what matters is
+that every column carries weight:
 
-```
-| Claim                 | Asserted in | Evidence         | Contradicted by    | Your ruling        | Status       |
-| TTA believes the      | pgs-tta     | PaymentProcessor | the processor      | processor's        | CONTRADICTED |
-| processor exposes one | (client)    | Client.java:58   | publishes a second | published contract |              |
-| refund endpoint       |             |                  | endpoint           | is authoritative   |              |
-```
+| Claim | Asserted in | Evidence | Contradicted by | Human ruling | Status |
+|---|---|---|---|---|---|
+| what one repository believes about the other | which repository asserts it | a file and line you can open | what the other repository actually shows | your decision, and the reason for it | `CONTRADICTED` |
 
-A row with three empty cells is a note to yourself, not a finding. The grader counts populated
-cells for exactly that reason.
+That example is deliberately not telling you what the claim is, and it is not a row you can copy.
+
+**The evidence column has to resolve.** If you cite a file and line, open it first — a citation
+that points at nothing is worse than no citation, because it looks like work. A row with three
+empty cells is a note to yourself, not a finding, and the grader counts populated cells for
+exactly that reason.
 
 This part is yours, not the agents'. Three things to be deliberate about:
 
@@ -535,15 +539,13 @@ work from. Deciding who knows what, who does what, and who decides what.
 
 Each implementation brief is a contract:
 
-```
-   ┌─────────────────────────────┬─────────────────────────────┐
-   │ Outcome                     │ Tools allowed               │
-   │ Authoritative inputs        │ Acceptance criteria owned   │
-   │ Repository scope            │ Dependencies on the other   │
-   │ Allowed areas               │ Expected return shape       │
-   │ Excluded areas              │ Stop conditions             │
-   └─────────────────────────────┴─────────────────────────────┘
-```
+| Each brief settles | And also |
+|---|---|
+| Outcome | Tools allowed |
+| Authoritative inputs | Acceptance criteria owned |
+| Repository scope | Dependencies on the other repository |
+| Allowed areas | Expected return shape |
+| Excluded areas | Stop conditions |
 
 **Stop conditions matter far more than they look.** A line like *"if the specification is silent
 on X, stop and report rather than choosing"* is what prevents an agent inventing a business rule
@@ -776,9 +778,8 @@ inherit your confidence in your own work.
 
 In `docs/finding-dispositions.md`:
 
-```
-  │ Finding │ Evidence │ In scope? │ Material? │ Disposition │ Rationale │
-```
+| Finding | Evidence | In scope? | Material? | Disposition | Rationale |
+|---|---|---|---|---|---|
 
 > ⚠ **A validator finding does not authorise a code change.**
 >

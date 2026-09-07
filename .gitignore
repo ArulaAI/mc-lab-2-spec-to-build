@@ -24,3 +24,12 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Artifacts a participant generates by following the guide. They are real deliverables -- the
+# grader reads them off the filesystem -- but they are outputs of this workspace rather than part
+# of the distribution, and committing them would ship one participant's answers to the next.
+docs/pair-result.txt
+docs/validator-brief-tta.md
+docs/validator-brief-payment-processor.md
+docs/validator-report.md
+docs/plans/plan.status.json

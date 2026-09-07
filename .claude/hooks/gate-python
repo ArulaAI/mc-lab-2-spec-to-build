@@ -52,6 +52,10 @@ if [ "${1:-}" = "--self-test" ]; then
   rm -f "$CF";                          check "cache absent resolves"        0 "$(invoke)"
   : > "$CF";                            check "cache empty resolves"         0 "$(invoke)"
   printf '/nonexistent/python3' > "$CF"; check "cache STALE self-heals"       0 "$(invoke)"
+  printf '%s' "$(command -v true)" > "$CF"
+  OUT=$(CLAUDE_PROJECT_DIR="$T" bash "$T/.claude/hooks/gate-python" "$T/.claude/hooks/probe.py" 2>/dev/null)
+  if [ "$OUT" = "ran" ]; then printf '  ok    non-Python executable in cache rejected\n'; pass=$((pass+1));
+  else printf '  FAIL  non-Python executable in cache was exec'"'"'d (output %s)\n' "${OUT:-<empty>}"; fail=$((fail+1)); fi
   check "stale cache was repaired" "yes" "$([ -s "$CF" ] && "$(cat "$CF")" -c pass >/dev/null 2>&1 && printf yes || printf no)"
   check "valid cache reused"            0 "$(invoke)"
 
@@ -74,10 +78,14 @@ fi
 
 CACHE_FILE="${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/.python_path"
 
-# Usable means "it runs and it is new enough" -- not "a file exists at this path".
+# Usable means "it runs, it is Python, and it is new enough" -- not "a file exists at this path".
+# Checked on produced output rather than exit status: a great many binaries exit 0 while ignoring
+# their arguments (/bin/true being the trivial case), so an exit-code test would accept one as an
+# interpreter and then exec it with a script path it silently discards. That failure is worse than
+# a stale cache, because the hook appears to run and produces nothing.
 usable() {
   [ -n "${1:-}" ] || return 1
-  "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1
+  [ "$("$1" -c 'import sys; print(1 if sys.version_info >= (3, 8) else 0)' 2>/dev/null)" = "1" ]
 }
 
 # Discovery order matches Workbench's resolve-python exactly, so the two cannot disagree about

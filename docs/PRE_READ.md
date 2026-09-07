@@ -114,7 +114,7 @@ demonstration, stop and ask what the demonstration was showing you instead.
 ## 8. What this lab assumes you already have
 
 From Lab 1: fresh-context review, sub-agents, human gates, deterministic checks, journey and
-hand-off. These are not re-taught. If any of them is hazy, say so early — Stage 0 is the moment for
+hand-off. These are not re-taught. If any of them is hazy, say so early — the Start step is the moment for
 it, not Stage 4.
 
 You do **not** need to know anything new about payments. You need to be willing to say "the source

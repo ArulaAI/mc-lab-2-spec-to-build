@@ -8,7 +8,7 @@
 ║                                                                            ║
 ║   Two repositories. Both green. They still disagree.                       ║
 ║                                                                            ║
-║   120 minutes · 7 stages · 2 services · 1 seam                             ║
+║   120 minutes · 6 stages · 2 services · 1 seam                             ║
 ║                                                                            ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 ```
@@ -75,7 +75,7 @@ the next stage something concrete.
 ```
  STAGE                              CONCEPT                            YOU LEAVE WITH
  ────────────────────────────────────────────────────────────────────────────────────────
-  0  Ground the Work                context boundary & authority       a sealed prediction
+  ~  Start: Ground the Work        context boundary & authority       a sealed prediction
         │
   1  Audit Context                  scoped agents, parallel            the context ledger
         │                           delegation
@@ -87,7 +87,7 @@ the next stage something concrete.
         │                           rollout sequencing
   4  Build & Validate               bounded execution, deterministic   a remediated seam
         │                           guardrails
-  5  Validate with Fresh Context    independent judgment               evidence you didn't write
+  5  Validate the Pair              independent judgment               evidence you didn't write
         │
        ⏸  Q&A
         │
@@ -97,22 +97,22 @@ the next stage something concrete.
 ### Where the time goes
 
 ```
-  S0  ██████                             10 min   Ground the Work
-  S1  ███████████                        18 min   Audit Context
-  S2  ███████████                        18 min   Author & Validate the Spec
-  Q&A ██                                  3 min   ⏸
-  S3  ████████                           14 min   Plan Across Repositories
-  S4  █████████████████                  28 min   Build & Validate
-  S5  ████████████                       20 min   Validate with Fresh Context
-  Q&A ██                                  3 min   ⏸
-  S6  ███                                 5 min   Review, Handoff & Close
+  Start ████                              6 min   Ground the Work
+  S1  ██████████                        17 min   Audit Context
+  S2  █████████                         16 min   Author & Validate the Spec
+  Q&A ██                                 4 min   ⏸
+  S3  █████████                         16 min   Plan Across Repositories
+  S4  ███████████████                   25 min   Build & Validate
+  S5  ████████████                      20 min   Validate the Pair
+  Q&A ██                                 4 min   ⏸
+  S6  ███                                6 min   Review, Handoff & Close
       ─────────────────────────────────────────
-                                        119 min   at the low end of every stage
+                                       114 min   committed, leaving 6 minutes of float
 ```
 
-Stages carry ranges (Stage 1 is 18–20, Stage 4 is 28–30). Those ranges are where the facilitator
-**trades** time between stages — not where extra time comes from. Something always runs long.
-When it does, the trade comes out of Stage 4, never Stage 5.
+Six minutes of float, and it is float rather than slack you can spend twice. Something always
+runs long; when it does the trade comes out of Stage 4, never Stage 5. Stage 5 is the judgment
+anchor and is the reason the whole exercise is worth doing.
 
 ---
 
@@ -166,9 +166,9 @@ Must end with **"Setup complete"**. If it does not, flag it now — not at minut
 ---
 
 ```
-┌──────────────────────────────────────────────────────────────── 10 min ──┐
-│  STAGE 0  ·  GROUND THE WORK                                             │
-│  Frame the Boundary                                                      │
+┌───────────────────────────────────────────────────────────────── 6 min ──┐
+│  START  ·  GROUND THE WORK                                               │
+│  Frame the Boundary            not a numbered stage -- the six begin next │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -255,7 +255,7 @@ nothing.
 ---
 
 ```
-┌───────────────────────────────────────────────────────────── 18–20 min ──┐
+┌─────────────────────────────────────────────────────────────── 17 min ──┐
 │  STAGE 1  ·  AUDIT CONTEXT                                               │
 │  Map the Seam                                                            │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -389,7 +389,7 @@ confidence as evidence. Go back and ask which repository actually *proved* each 
 ---
 
 ```
-┌───────────────────────────────────────────────────────────── 18–20 min ──┐
+┌─────────────────────────────────────────────────────────────── 16 min ──┐
 │  STAGE 2  ·  AUTHOR & VALIDATE THE SPEC                                  │
 │  Make the Spec Buildable                                                 │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -515,7 +515,7 @@ the room.
 ---
 
 ```
-┌───────────────────────────────────────────────────────────── 14–15 min ──┐
+┌─────────────────────────────────────────────────────────────── 16 min ──┐
 │  STAGE 3  ·  PLAN ACROSS REPOSITORIES                                    │
 │  Plan and Brief                                                          │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -568,7 +568,7 @@ correct in its final state while being unsafe halfway there.
 
 ### ◆ Predict #3 — reopen Prediction #1
 
-You sealed an answer in Stage 0, blind. You now know the seam and the specification.
+You sealed an answer at the Start step, blind. You now know the seam and the specification.
 
 > **Would you change your answer? What did you not know when you made it?**
 
@@ -594,7 +594,7 @@ Every boundary you drew here is a boundary the agents cannot cross in Stage 4.*
 ---
 
 ```
-┌───────────────────────────────────────────────────────────── 28–30 min ──┐
+┌─────────────────────────────────────────────────────────────── 25 min ──┐
 │  STAGE 4  ·  BUILD & VALIDATE                                            │
 │  Build the Bounded Slice                                                 │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -701,7 +701,7 @@ Both green is the *entry* condition for Stage 5, not the finish line.
 
 ```
 ┌──────────────────────────────────────────────────────────────── 20 min ──┐
-│  STAGE 5  ·  VALIDATE WITH FRESH CONTEXT                                 │
+│  STAGE 5  ·  VALIDATE THE PAIR                                           │
 │  Prove the Pair                                        ★ NEVER CUT       │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
@@ -813,7 +813,7 @@ If it stays flat or the validator produces new material findings, something real
 ---
 
 ```
-┌─────────────────────────────────────────────────────────────── 5–6 min ──┐
+┌──────────────────────────────────────────────────────────────── 6 min ──┐
 │  STAGE 6  ·  REVIEW, HANDOFF & CLOSE                                     │
 │  Transfer the Learning                                                   │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -828,7 +828,7 @@ If it stays flat or the validator produces new material findings, something real
 You have now answered the rollout question three times:
 
 ```
-   Stage 0   blind        ─────►   Stage 3   informed   ─────►   Stage 5   evidenced
+   the Start step   blind        ─────►   Stage 3   informed   ─────►   Stage 5   evidenced
 ```
 
 Compare all three. What made the difference — and would you have found it without the
@@ -907,7 +907,7 @@ validation and finding out what it catches.
 | The write gate blocked a file you believe you need | It is authority rather than workspace | Read it instead. If you are convinced the change is genuinely required, that is a finding to raise, not a file to force |
 | An agent asks to change the other repository | Its brief did not bound it, or it is guessing across the boundary | Refuse, and tighten the brief's excluded areas. The seam is yours |
 | The validator reports FAIL while the harness is green | The validator judges from the diff and cannot see code that was already correct | Disposition it `PRE-EXISTING` and name the harness test that is your evidence |
-| `.claude/journey/` is empty after `/lab` | Journey recording did not start | Re-run `/lab`. Do this at Stage 0 — it cannot be reconstructed later |
+| `.claude/journey/` is empty after `/lab` | Journey recording did not start | Re-run `/lab`. Do this at the Start step — it cannot be reconstructed later |
 
 ## If you run out of time
 

@@ -12,6 +12,31 @@ lab: 2
 title: "One Refund Across a Service Boundary"
 pass_threshold: 70
 
+# The canonical objectives. /lab renders these verbatim, so the wording here is what every
+# participant sees on every machine -- that is the point, and it is why they live in one file
+# rather than being paraphrased per document.
+#
+# Grounding is a Start step, not a numbered stage. The lab has exactly six numbered stages.
+objectives:
+  - id: 1
+    name: "Audit Context"
+    objective: "Audit each repository independently and reconcile evidence at the service boundary."
+  - id: 2
+    name: "Author & Validate the Spec"
+    objective: "Produce a build-ready specification from verified evidence without inventing unsupported behavior."
+  - id: 3
+    name: "Plan Across Repositories"
+    objective: "Define compatibility, ownership, dependencies, and bounded agent contracts for both repositories."
+  - id: 4
+    name: "Build & Validate"
+    objective: "Execute the bounded repository changes and verify each repository against its acceptance criteria."
+  - id: 5
+    name: "Validate the Pair"
+    objective: "Prove the pair works together, independently review each repository, and disposition every material finding."
+  - id: 6
+    name: "Review, Handoff & Close"
+    objective: "Record what was proven, what remains open, and the reusable practice to carry forward."
+
 criteria:
   # ---------------------------------------------------------------- harness and grounding (10)
   - id: harness-journey

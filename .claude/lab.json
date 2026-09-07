@@ -6,13 +6,13 @@
   "journey_session": "lab-2-learner-id",
   "minutes": 120,
   "objectives": [
-    "harness-confirmed",
-    "context-ledger-reconciled",
-    "spec-ready-with-open-questions-intact",
-    "orchestration-plan-with-agent-briefs",
-    "seam-remediated-within-scope",
-    "pair-verification-green",
-    "fresh-context-validation-dispositioned",
-    "out-of-scope-resisted-and-recorded"
-  ]
+    "Audit each repository independently and reconcile evidence at the service boundary.",
+    "Produce a build-ready specification from verified evidence without inventing unsupported behavior.",
+    "Define compatibility, ownership, dependencies, and bounded agent contracts for both repositories.",
+    "Execute the bounded repository changes and verify each repository against its acceptance criteria.",
+    "Prove the pair works together, independently review each repository, and disposition every material finding.",
+    "Record what was proven, what remains open, and the reusable practice to carry forward."
+  ],
+  "stages": 6,
+  "start_step": "Ground the Work (not a numbered stage)"
 }

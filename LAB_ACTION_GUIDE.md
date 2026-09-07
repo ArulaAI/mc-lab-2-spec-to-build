@@ -135,8 +135,6 @@ will actually need.
 
   ⏸ Q&A pause   Scheduled, so questions land somewhere instead of derailing the room.
 
-  ⌘ Run         A command to actually execute.
-
   ⌂ You'll see  Real output from a real run, so you can tell "different" from "wrong".
                 Yours will differ in wording. It should not differ in shape.
 
@@ -183,8 +181,10 @@ ambiguity.
 
 ### 1 · Start the lab
 
+Run:
+
 ```
-⌘  /lab
+/lab
 ```
 
 **Once `/lab` has run**, confirm a journey event actually landed — not merely that the command
@@ -248,8 +248,10 @@ nothing.
   [ ] Prediction #1 is written down, with reasoning, before you opened any code
 ```
 
+Run:
+
 ```
-⌘  /hand-off
+/hand-off
 ```
 
 ---
@@ -423,8 +425,10 @@ account would have hidden with plausible invention.*
 If every row came back VERIFIED and nothing is UNKNOWN, you have probably accepted an agent's
 confidence as evidence. Go back and ask which repository actually *proved* each claim.
 
+Run:
+
 ```
-⌘  /hand-off
+/hand-off
 ```
 
 ---
@@ -446,8 +450,10 @@ confidence as evidence. Go back and ask which repository actually *proved* each 
 The validated specification is the bounded authority every agent in Stage 4 will build from. It
 is the highest-leverage document in the lab, and right now it is not good enough.
 
+Run:
+
 ```
-⌘  python3 .claude/scripts/validate_spec.py
+/check-spec
 ```
 
 It will refuse the specification and name the failing checks.
@@ -551,14 +557,16 @@ vague you left in it will become an invention you did not authorise.*
 ### ✓ Done when
 
 ```
-  [ ] validate_spec.py reports READY
+  [ ] /check-spec reports READY
   [ ] OQ-1 is still listed as open — you did not answer it
   [ ] every ownership row names exactly one service
   [ ] anything you added traces to a line you can point at in PGS_DECISIONS.md
 ```
 
+Run:
+
 ```
-⌘  /hand-off
+/hand-off
 ```
 
 ### ⏸ Q&A pause — 3 min
@@ -630,8 +638,10 @@ Notice what that question is *not*. It is not "which side matters more". It is "
 of deployed versions are safe **while the change is in flight**" — and a change can be perfectly
 correct in its final state while being unsafe halfway there.
 
+Run:
+
 ```
-⌘  python3 scripts/run_pair_verification.py --explain
+python3 scripts/run_pair_verification.py --explain
 ```
 
 ### ◆ Predict #3 — reopen Prediction #1
@@ -645,18 +655,39 @@ Write the revision next to the original. Keep both — the gap between them is t
 *What you just decided: who changes first, what each agent may touch, and when it must stop.
 Every boundary you drew here is a boundary the agents cannot cross in Stage 4.*
 
+**⌂ You'll see** — the plan gate reports each check and a verdict. The acceptance-criteria checks
+are the ones that decide whether Stage 5 can do its job:
+
+```
+  [PASS] both repositories are named in the plan
+  [PASS] rollout order is stated with a rationale
+  [FAIL] every acceptance criterion is owned by a contract   no contract owns: AC-4
+  [PASS] each repository contract owns at least one criterion
+  ...
+  N/M structural checks  ->  DRAFT
+```
+
+Your wording will differ from your neighbour's; this output will not. It is a script.
+
 ### ✓ Done when
 
 ```
-  [ ] validate_plan.py reports READY
+  [ ] /check-plan reports READY
   [ ] each brief names its repository, its ACs, its excluded areas and its stop conditions
   [ ] the rollout order is written down WITH the reason it is safe in that order
   [ ] Prediction #3 sits next to Prediction #1, both still legible
 ```
 
+Run:
+
 ```
-⌘  python3 .claude/scripts/validate_plan.py
-⌘  /hand-off
+/check-plan
+```
+
+Then:
+
+```
+/hand-off
 ```
 
 ---
@@ -715,13 +746,19 @@ what you are doing. That is a different activity from mechanical repetition.
 > declared `NO_DIFF_EXPECTED: true`, the job was to establish that the owned criteria are already
 > satisfied and show the evidence. Some of the best returns you get today will contain no diff.
 
-### Expected return from each agent
+### ⌂ You'll see — the return shape from each agent
 
 ```
-   Files changed         Verification run
-   ACs addressed         Open concern
-   Tests added           No-scope-expansion confirmation
+   REPOSITORY:                       VERIFICATION_COMMAND:
+   ACCEPTANCE_CRITERIA_ADDRESSED:    VERIFICATION_RESULT:
+   FILES_CHANGED:                    UNRESOLVED:
+                                     STOP_REQUIRED:
 ```
+
+Read them side by side. The two questions worth asking: does each return only touch the repository
+its contract named, and does `VERIFICATION_RESULT` match what the agent says it did? A green claim
+that does not match its own build output is worse than a red one, because it removes the reason
+anyone would look.
 
 ### Three things that will actually happen
 
@@ -768,8 +805,10 @@ Writes follow the rollout order you decided in Stage 3.
 
 Both green is the *entry* condition for Stage 5, not the finish line.
 
+Run:
+
 ```
-⌘  /hand-off
+/hand-off
 ```
 
 ---
@@ -801,8 +840,10 @@ One thing, written down, before you run either. Be specific.
 
 ### 1 · Deterministic evidence first
 
+Run:
+
 ```
-⌘  python3 scripts/run_pair_verification.py
+/verify-pair
 ```
 
 This answers the only question that matters: **are the two services actually in agreement?** Each
@@ -823,8 +864,10 @@ somebody made and becomes something you can point at.
 
 ### 2 · Then independent judgment — two validators, two briefs
 
+Run:
+
 ```
-⌘  python3 .claude/scripts/build_validator_brief.py
+/build-validator-briefs
 ```
 
 That writes **one brief per repository**. Each carries the specification, both scope documents,
@@ -909,8 +952,10 @@ long.
   [ ] you can say what the harness proves and what it does not
 ```
 
+Run:
+
 ```
-⌘  /hand-off
+/hand-off
 ```
 
 ### ⏸ Q&A pause — 3 min
@@ -954,8 +999,10 @@ again on Monday, on your own code, with your own team.
   [ ] the journey trail exists
 ```
 
+Run:
+
 ```
-⌘  /hand-off
+/hand-off
 ```
 
 Then confirm `.claude/journey/` holds a real event trail.

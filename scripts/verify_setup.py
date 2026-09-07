@@ -105,6 +105,16 @@ def check_workspace(r: Result) -> None:
     r.check("gate launcher self-test", "0 failed" in launcher.stdout,
             launcher.stdout.strip().splitlines()[-1] if launcher.stdout else "did not run")
 
+    # The gate's matcher names the tools it intercepts, so its coverage is frozen at the moment it
+    # was written while the harness's tool set moves. Reported, not fatal: a new read-only tool is
+    # harmless, and only a human can tell which kind a new tool is.
+    drift = run([sys.executable, str(ROOT / ".claude/scripts/check_matcher_drift.py")])
+    r.check("write gate covers observed tools", drift.returncode == 0,
+            "no drift" if drift.returncode == 0
+            else "tools were used that the gate does not intercept -- run "
+                 "python3 .claude/scripts/check_matcher_drift.py",
+            fatal=False)
+
 
 def existing_work(service: pathlib.Path) -> bool:
     """True if the working copy holds commits or uncommitted changes beyond the starter commit."""

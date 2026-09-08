@@ -49,7 +49,7 @@ Once you have a bypass, the interesting part is not the technique:
 Run this and see whether your bypass was invisible or merely unprevented:
 
 ```bash
-python3 .claude/scripts/anti_gaming.py
+bash .claude/scripts/run .claude/scripts/anti_gaming.py
 ```
 
 Good hunting.

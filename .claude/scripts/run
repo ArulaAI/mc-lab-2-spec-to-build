@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# .claude/scripts/run -- the one way the lab invokes a Python helper.
+#
+# Why this exists
+# ---------------
+# `python3 scripts/verify_setup.py` is not a cross-platform instruction. On a Windows box where
+# Python came from the Store or the python.org installer, the interpreter is `py -3` and `python3`
+# is either absent or a stub that opens the Store. A guide that prints `python3` therefore works
+# for some of the room and fails for the rest, and the failure looks like a broken lab rather than
+# a launcher difference.
+#
+# Setup is allowed to be platform-specific -- it runs once, before the session, with the README
+# next to it. The core lab is not: a participant mid-stage should type one thing that works.
+#
+# This wrapper reuses the convention Workbench already owns -- the project-local
+# `.claude/hooks/.python_path` cache written by Workbench's `resolve-python` SessionStart hook --
+# and falls back to Workbench's own discovery order when the cache is absent or stale. It is the
+# same resolution `.claude/hooks/gate-python` performs, deliberately: one cache, one order, two
+# callers. What differs is the failure direction, and that difference is the point.
+#
+#   gate-python  guards writes, so it fails CLOSED: no usable interpreter means the write is
+#                denied, because a gate that cannot run must not wave work through.
+#   run          invokes a helper, so it fails LOUD: no usable interpreter means a message naming
+#                the two things that fix it, and a non-zero exit. Failing closed here would be
+#                indistinguishable from the helper reporting a genuine problem.
+#
+#   bash .claude/scripts/run scripts/verify_setup.py [args...]
+#   bash .claude/scripts/run --self-test
+
+set -u
+
+CACHE_DIR="${CLAUDE_PROJECT_DIR:-.}/.claude/hooks"
+CACHE="$CACHE_DIR/.python_path"
+
+# Trusting exit status is not enough. `/bin/true -c '...'` ignores its arguments and exits 0, so any
+# argument-ignoring binary on the cached path would pass a status check and then fail to run the
+# helper. Require the interpreter to actually produce the answer.
+usable() {
+  [ -n "${1:-}" ] || return 1
+  [ "$("$1" -c 'import sys; print(1 if sys.version_info >= (3, 8) else 0)' 2>/dev/null)" = "1" ]
+}
+
+resolve() {
+  if [ -f "$CACHE" ]; then
+    cached="$(tr -d '\r\n' < "$CACHE" 2>/dev/null)"
+    if usable "$cached"; then printf '%s' "$cached"; return 0; fi
+  fi
+  # Workbench's discovery order, unchanged. `py -3` first because on Windows it is the one that is
+  # actually present.
+  if command -v py >/dev/null 2>&1 && \
+     [ "$(py -3 -c 'import sys; print(1 if sys.version_info >= (3, 8) else 0)' 2>/dev/null)" = "1" ]; then
+    printf 'py -3'; return 0
+  fi
+  for cand in python3 python; do
+    if command -v "$cand" >/dev/null 2>&1 && usable "$(command -v "$cand")"; then
+      printf '%s' "$(command -v "$cand")"; return 0
+    fi
+  done
+  return 1
+}
+
+if [ "${1:-}" = "--self-test" ]; then
+  pass=0; fail=0
+  t() { if [ "$2" = "$3" ]; then echo "ok    $1"; pass=$((pass+1));
+        else echo "FAIL  $1 (got '$2', want '$3')"; fail=$((fail+1)); fi; }
+
+  tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+  mkdir -p "$tmp/.claude/hooks"
+
+  # an interpreter that exits 0 but answers nothing must be rejected
+  t "argument-ignoring binary rejected" "$(usable /bin/true && echo y || echo n)" "n"
+  t "empty candidate rejected"          "$(usable '' && echo y || echo n)" "n"
+  real="$(command -v python3 || command -v python)"
+  t "a real interpreter accepted"       "$(usable "$real" && echo y || echo n)" "y"
+
+  # cache honoured when good, ignored when bad -- never trusted blindly
+  CACHE_DIR="$tmp/.claude/hooks"; CACHE="$CACHE_DIR/.python_path"
+  printf '%s\n' "$real" > "$CACHE"
+  t "good cache is used"               "$(resolve)" "$real"
+  printf '/bin/true\n' > "$CACHE"
+  t "argument-ignoring cache bypassed" "$([ "$(resolve)" = "/bin/true" ] && echo y || echo n)" "n"
+  printf '/nonexistent/python\n' > "$CACHE"
+  t "missing-path cache bypassed"      "$([ "$(resolve)" = "/nonexistent/python" ] && echo y || echo n)" "n"
+  printf '  %s  \r\n' "$real" > "$CACHE"
+  t "CRLF and spaces tolerated"        "$(resolve)" "$real"
+  rm -f "$CACHE"
+  t "absent cache still resolves"      "$([ -n "$(resolve)" ] && echo y || echo n)" "y"
+  t "resolution succeeds on this host" "$(resolve >/dev/null && echo y || echo n)" "y"
+
+  # the contract that matters: a helper actually runs, and its exit status is passed through
+  CACHE_DIR="${CLAUDE_PROJECT_DIR:-.}/.claude/hooks"; CACHE="$CACHE_DIR/.python_path"
+  py="$(resolve)"
+  printf 'import sys\nprint("ran")\nsys.exit(7)\n' > "$tmp/probe.py"
+  out="$($py "$tmp/probe.py" 2>/dev/null)"; code=$?
+  t "helper output reaches the caller"  "$out" "ran"
+  t "helper exit status is preserved"   "$code" "7"
+
+  echo
+  echo "run self-test: $pass passed, $fail failed"
+  [ "$fail" -eq 0 ] || exit 1
+  exit 0
+fi
+
+if [ "$#" -eq 0 ]; then
+  echo "usage: bash .claude/scripts/run <script.py> [args...]" >&2
+  exit 2
+fi
+
+PY="$(resolve)" || {
+  cat >&2 <<'MSG'
+No usable Python 3.8+ interpreter could be found.
+
+Two things fix this, in order:
+
+  1. Install Python 3.8 or newer, then open a new Claude Code session so Workbench's
+     SessionStart hook can cache the interpreter in .claude/hooks/.python_path.
+  2. If it is already installed, that cache may be stale. Delete
+     .claude/hooks/.python_path and start a new session.
+
+Do not commit .claude/hooks/.python_path -- it is a machine-local cache and is gitignored.
+MSG
+  exit 1
+}
+
+# shellcheck disable=SC2086
+exec $PY "$@"

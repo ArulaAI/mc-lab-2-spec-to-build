@@ -5,7 +5,7 @@ description: "Stage 5. Assembles one fresh-context validator brief per repositor
 
 Assemble the repo-scoped validator briefs.
 
-1. Execute: `python3 .claude/scripts/build_validator_brief.py`
+1. Execute: `bash .claude/scripts/run .claude/scripts/build_validator_brief.py`
 2. Report which briefs were written and how many lines each carries.
 3. State what each brief contains and, more importantly, what it does not:
 

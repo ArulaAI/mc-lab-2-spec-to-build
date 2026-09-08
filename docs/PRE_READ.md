@@ -8,7 +8,7 @@ setup step and read while Maven downloads.
 ## 1. Setup first
 
 ```bash
-python3 scripts/verify_setup.py
+bash .claude/scripts/run scripts/verify_setup.py
 ```
 
 This checks your toolchain, creates the two service repositories, warms the Maven cache and

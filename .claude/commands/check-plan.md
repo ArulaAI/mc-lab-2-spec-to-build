@@ -5,7 +5,7 @@ description: "Stage 3 readiness gate. Checks the orchestration plan and both age
 
 Run the deterministic plan readiness gate and report its result.
 
-1. Execute: `python3 .claude/scripts/validate_plan.py`
+1. Execute: `bash .claude/scripts/run .claude/scripts/validate_plan.py`
 2. Report every check with its outcome, then `READY` or `DRAFT`.
 3. Give particular attention to the acceptance-criteria ownership checks, because Stage 5 depends
    on them:

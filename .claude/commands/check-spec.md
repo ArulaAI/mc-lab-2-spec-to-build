@@ -5,7 +5,7 @@ description: "Stage 2 readiness gate. Reports whether the specification is struc
 
 Run the deterministic specification readiness gate and report its result.
 
-1. Execute: `python3 .claude/scripts/validate_spec.py`
+1. Execute: `bash .claude/scripts/run .claude/scripts/validate_spec.py`
 2. Report the outcome exactly as the script gives it: the pass/fail line for every check, the
    `N/M structural checks` total, and `READY` or `DRAFT`.
 3. Say which checks failed and what each one is asking for. Do not paraphrase a failure into a

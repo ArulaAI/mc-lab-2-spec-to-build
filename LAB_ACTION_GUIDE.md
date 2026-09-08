@@ -156,7 +156,7 @@ will actually need.
 ### Preflight
 
 ```bash
-python3 scripts/verify_setup.py
+bash .claude/scripts/run scripts/verify_setup.py
 ```
 
 Must end with **"Setup complete"**. If it does not, flag it now — not at minute forty.
@@ -640,8 +640,8 @@ correct in its final state while being unsafe halfway there.
 
 Run:
 
-```
-python3 scripts/run_pair_verification.py --explain
+```bash
+bash .claude/scripts/run scripts/run_pair_verification.py --explain
 ```
 
 ### ◆ Predict #3 — reopen Prediction #1
@@ -1054,7 +1054,7 @@ validation and finding out what it catches.
 |---|---|---|
 | `verify_setup.py` does not end with "Setup complete" | A prerequisite is missing, or the first Maven build has not resolved yet | Read the first `[FAIL]` line — it names the tool. A cold Maven cache can take several minutes; let it finish before concluding anything |
 | `mvn verify` fails in a repository you have not touched | You are mid-edit, or an earlier agent left the tree inconsistent | `git -C <repo> diff` to see what changed. `git -C <repo> checkout -- .` returns that repository to its starter commit |
-| The pair harness cannot resolve `pgs-tta` or `pgs-payment-processor` | The services were not installed to your local Maven repository, or only one was | Use `python3 scripts/run_pair_verification.py` rather than calling Maven in the harness directly — it installs both, in the required order |
+| The pair harness cannot resolve `pgs-tta` or `pgs-payment-processor` | The services were not installed to your local Maven repository, or only one was | Use `bash .claude/scripts/run scripts/run_pair_verification.py` rather than calling Maven in the harness directly — it installs both, in the required order |
 | `validate_spec.py` stays at DRAFT and you cannot see why | A failing check is worded generally | Every `[FAIL]` line states what is missing. Fix them one at a time and re-run; the count moves |
 | The write gate blocked a file you believe you need | It is authority rather than workspace | Read it instead. If you are convinced the change is genuinely required, that is a finding to raise, not a file to force |
 | An agent asks to change the other repository | Its brief did not bound it, or it is guessing across the boundary | Refuse, and tighten the brief's excluded areas. The seam is yours |
@@ -1071,7 +1071,7 @@ Time-boxes, so a stall does not cost you the stage that matters:
 - **Stage 4 is unfinished.** Stop where you are and go to Stage 5 anyway. Partial work judged
   independently teaches more than complete work nobody checked.
 - **A repository is beyond recovery.** `git -C <repo> checkout -- .` returns it to the starter
-  commit. `python3 scripts/verify_setup.py --reset` rebuilds both from scratch, and will tell you
+  commit. `bash .claude/scripts/run scripts/verify_setup.py --reset` rebuilds both from scratch, and will tell you
   exactly what it is about to discard before it does it.
 - **You are simply behind.** Say so. There are facilitator checkpoints for this and using one
   costs you nothing.

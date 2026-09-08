@@ -43,12 +43,16 @@ inside either one — which is why the central fact of the lab is:
   `code-to-spec-validator`
 - A warm `~/.m2`. The lab makes no network calls at runtime, but a first Maven build on a cold
   cache resolves dependencies like any other.
-- **A bash-compatible shell.** All terminal commands in this lab assume bash (Git Bash on Windows).
+- **A bash-compatible shell.** All terminal commands in this lab assume bash (Git Bash on
+  Windows). Every helper is invoked through one wrapper, `bash .claude/scripts/run <script>`,
+  which resolves the interpreter for you — `py -3` on a Windows box where `python3` is absent
+  or a Store stub, `python3` elsewhere — reusing the same project-local cache the Workbench
+  plugin writes. That is why the guide prints one command rather than one per platform.
 
 ## Setup — before session day, not during it
 
 ```bash
-python3 scripts/verify_setup.py
+bash .claude/scripts/run scripts/verify_setup.py
 ```
 
 This checks the toolchain, initialises the two service directories (`pgs-tta/` and
@@ -99,14 +103,14 @@ Stage 5 is the anchor and is never cut; when something overruns, the trade comes
 ## Commands
 
 ```bash
-python3 scripts/verify_setup.py             # set up and verify the workspace
-python3 scripts/run_pair_verification.py    # prove the seam
-python3 scripts/run_pair_verification.py --explain   # what the compatibility matrix asks
+bash .claude/scripts/run scripts/verify_setup.py             # set up and verify the workspace
+bash .claude/scripts/run scripts/run_pair_verification.py    # prove the seam
+bash .claude/scripts/run scripts/run_pair_verification.py --explain   # what the compatibility matrix asks
 
-python3 .claude/scripts/validate_spec.py    # Stage 2 readiness gate
-python3 .claude/scripts/validate_plan.py    # Stage 3 plan gate
-python3 .claude/scripts/build_validator_brief.py     # Stage 5 brief, assembled deterministically
-python3 .claude/scripts/grade_repo.py       # deterministic grading
+bash .claude/scripts/run .claude/scripts/validate_spec.py    # Stage 2 readiness gate
+bash .claude/scripts/run .claude/scripts/validate_plan.py    # Stage 3 plan gate
+bash .claude/scripts/run .claude/scripts/build_validator_brief.py     # Stage 5 brief, assembled deterministically
+bash .claude/scripts/run .claude/scripts/grade_repo.py       # deterministic grading
 ```
 
 ## Architecture notes

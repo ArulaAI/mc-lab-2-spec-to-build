@@ -37,7 +37,7 @@ about the domain.
    path is not authorisation to use it.
 
 6. **Pair-level evidence before completion.** Two green repositories are not evidence the seam is
-   correct. `python3 scripts/run_pair_verification.py` is what settles that question.
+   correct. `bash .claude/scripts/run scripts/run_pair_verification.py` is what settles that question.
 
 ## Questions you may ask
 

@@ -5,7 +5,7 @@ description: "Prove the seam. Runs deterministic pair verification across both s
 
 Run the deterministic pair-verification harness and report its result.
 
-1. Execute: `python3 scripts/run_pair_verification.py`
+1. Execute: `bash .claude/scripts/run scripts/run_pair_verification.py`
 2. Report, in this shape:
 
    ```

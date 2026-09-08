@@ -2,7 +2,7 @@
 
 Twelve structural checks. A specification clears the bar when all twelve hold.
 
-The deterministic gate — `python3 .claude/scripts/validate_spec.py` — runs every check below.
+The deterministic gate — `bash .claude/scripts/run .claude/scripts/validate_spec.py` — runs every check below.
 It tells you whether the specification is well-formed enough to build from. It cannot tell you
 whether the specification is *correct* — that judgement stays human, and the status file says so
 rather than implying a machine blessed the content.

@@ -27,6 +27,6 @@ Status values:
 Keep this schema. Do not replace it with a differently-shaped table.
 -->
 
-| Claim | Asserted in | Evidence | Contradicted by | Human ruling | Status |
-|---|---|---|---|---|---|
-| | | | | | |
+| Claim | Asserted in | Evidence | Contradicted by | Status |
+|---|---|---|---|---|
+| | | | | |

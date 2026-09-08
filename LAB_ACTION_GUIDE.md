@@ -411,7 +411,6 @@ view across the service boundary:
 ```
    evidence-backed claims
    visible contradictions
-   human rulings
    unresolved items recorded as UNKNOWN
 ```
 
@@ -425,7 +424,6 @@ Confirm that:
   [ ] material claims are supported by inspectable evidence
   [ ] reconciliation began only after both auditors returned
   [ ] every material disagreement is resolved by evidence or recorded as UNKNOWN
-  [ ] docs/context-ledger.md reflects the human rulings
   [ ] no unsupported payment behavior was inferred
 ```
 
@@ -433,7 +431,7 @@ Confirm that:
 repository alone?
 
 *That is the reason for separating the two audit contexts: each agent provides a local
-evidence-backed view, while the cross-repository decision remains explicit and human-owned.*
+evidence-backed view, while the cross-repository decision remains explicit.*
 
 ### ✓ Done when
 

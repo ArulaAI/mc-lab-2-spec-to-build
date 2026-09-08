@@ -73,7 +73,7 @@ The whole lab on one screen. Each stage teaches one agentic-engineering concept,
 the next stage something concrete.
 
 ```
- STAGE                              CONCEPT                            YOU LEAVE WITH
+ STAGE                              CONCEPT                           Takeaways
  ────────────────────────────────────────────────────────────────────────────────────────
   ~  Start: Ground the Work        context boundary & authority       a sealed prediction
         │
@@ -267,167 +267,182 @@ Run:
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-*Two agents will each tell you the truth. They will contradict each other.*
+*Two repository audits can each be locally reasonable and still expose disagreement at the service
+boundary.*
 
 **Concept** — scoped sub-agents and parallel delegation
-**You leave with** — a context ledger you reconciled yourself
+**You leave with** — two independent repository audits reconciled into one context ledger
 
-> **Agents reason locally. You reconcile globally.**
+> **Agents investigate locally. You reconcile across the service boundary.**
 
-### Why not just hand one agent both repositories?
+### Why
 
-You could. Someone in the room will. Here is what happens:
+The evidence for the TTA → Payment Processor interaction is distributed across two repositories.
 
-```
-   ONE AGENT, BOTH REPOS              TWO AGENTS, ONE REPO EACH
-   ─────────────────────              ─────────────────────────
-   spends attention on                each finding is local
-   framework detail                   and checkable
+You will audit each repository independently, compare the evidence returned from both sides, and
+make the cross-repository rulings yourself.
 
-   reasons deeply about one           neither can guess across
-   side, shallowly about the          the boundary — so it says
-   other                              so instead
+### ◆ Predict #2 — identify the blind spot
 
-   fills the gap between them         the gaps stay visible,
-   with plausible invention           and YOU close them
+Before you begin:
 
-   you cannot tell which parts        the disagreements show up
-   it actually verified               as disagreements
-```
+> What are two things an auditor restricted to one repository could not establish about the other
+> side of the service boundary?
 
-The second shape is not more work. It is the only shape where the seam becomes visible, because
-a disagreement can only appear when two independent accounts are laid side by side.
+Write them down. You will revisit this after both audits return.
 
-### ◆ Predict #2
+### Step 1 · Run the two repository audits
 
-> The first agent will audit its repository and report with total confidence.
-> **Name two things it cannot possibly know** — things only the *other* repository can tell you.
+The `repo-auditor` sub-agent is already provided at [`.claude/agents/repo-auditor.md`](.claude/agents/repo-auditor.md).
 
-Write them down before you dispatch it.
-
-### The facilitator demonstrates — the repo-brief pattern
-
-The `repo-auditor` agent already exists at `.claude/agents/repo-auditor.md`. **The capability is
-standardised; the brief is yours.** The facilitator walks through the pattern **without launching
-anything** — you launch both, together, in a moment.
-
-What a brief has to pin down:
+Run this once in the parent Claude session:
 
 ```
-   the absolute repository root, and that globs and greps are rooted there
-   what to inspect: entry points, contract artifacts and versions, outbound
-     calls, business rules, boundary validations, error mappings, idempotency,
-     correlation, tests
-   that every claim cites a file, and a line where one applies
-   that anything needing the other repository goes under UNKNOWNS, not a guess
-   that it must report what the source requires and the repo does NOT do --
-     absence from code is not absence from authority
-   the six required return headings, verbatim
+Run two repo-auditor sub-agents in parallel:
+
+1. Audit pgs-tta.
+2. Audit pgs-payment-processor.
+
+Keep each auditor read-only and restricted to its assigned repository.
+
+For the TTA → Payment Processor refund boundary, inspect the relevant
+contract/version, mappings, validation or business rules, error semantics,
+idempotency, correlation behavior, and tests.
+
+Support material claims with inspectable repository evidence.
+Anything that cannot be established locally must remain UNKNOWN.
+
+Return both audits separately using:
+
+REPOSITORY:
+CLAIMS:
+EVIDENCE:
+CONTRADICTIONS:
+UNKNOWNS:
+STOP_REQUIRED:
+
+CONTRADICTIONS means contradictions within the assigned repository
+or against authority explicitly available to that auditor.
+Do not infer contradictions with the other repository.
+
+Do not reconcile the two audits.
+Do not update docs/context-ledger.md.
+Do not make cross-repository ownership or rollout decisions.
 ```
 
-Two of those are load-bearing for reasons that are not obvious.
-
-**The absolute root.** The agent has Read, Glob and Grep. A broad glob will happily return matches
-from outside the repository you meant. Scope has to come from the brief; the tooling will not
-supply it.
-
-**The six headings, in the brief itself.** The agent returns whatever shape the brief asks for — it
-does not enforce its own. Ask for the wrong shape and you get the wrong shape, politely.
+**⌂ You'll see** — two independent audit returns in the same parent Claude session:
 
 ```
-REPOSITORY:      CONTRADICTIONS:
-CLAIMS:          UNKNOWNS:
-EVIDENCE:        STOP_REQUIRED:
+TTA AUDIT
+
+REPOSITORY:
+CLAIMS:
+EVIDENCE:
+CONTRADICTIONS:
+UNKNOWNS:
+STOP_REQUIRED:
 ```
 
-### ▶ Your turn — write both briefs, then launch both at once
+```
+PAYMENT PROCESSOR AUDIT
 
-Write both repo briefs yourself. Same return shape, because that is what makes two reports into one
-comparison. But the two sides are not mirror images: one **translates and calls**, the other
-**decides and records**, so what is worth inspecting differs.
+REPOSITORY:
+CLAIMS:
+EVIDENCE:
+CONTRADICTIONS:
+UNKNOWNS:
+STOP_REQUIRED:
+```
 
-Then dispatch **both auditors in a single action**, before reading either result.
+Wait until both auditors have returned before moving on.
 
-That ordering is the whole technique. Launch one, read it, then brief the second and you have
-contaminated the second brief with the first agent's conclusions — and you will not be able to tell
-which of its findings were independent. Two agents launched blind to each other produce two
-accounts that can genuinely disagree.
+The audit results remain working evidence in the parent Claude session. You do not need to create
+separate report files.
 
-**⌂ You'll see** — two returns, each naming its own repository, each with its own `UNKNOWNS`. A
-return that answers a question about the *other* repository is a finding about your brief, not a
-gift: it means the scope did not hold.
+### Step 2 · Reconcile the two repository views
 
-### Then the real work — reconcile
+The starter repository already contains [`docs/context-ledger.md`](docs/context-ledger.md). Do not
+create a new ledger or change its structure.
 
-In [`docs/context-ledger.md`](docs/context-ledger.md):
+The ledger records:
 
-| Claim | Asserted in | Evidence | Contradicted by | Human ruling | Status |
-|---|---|---|---|---|---|
+```
+Claim | Asserted in | Evidence | Contradicted by | Human ruling | Status
+```
 
-**⌂ You'll see** — the *shape* of a reconciled row. The content is yours to find; what matters is
-that every column carries weight:
+Once both audits have completed, run:
 
-| Claim | Asserted in | Evidence | Contradicted by | Human ruling | Status |
-|---|---|---|---|---|---|
-| what one repository believes about the other | which repository asserts it | a file and line you can open | what the other repository actually shows | your decision, and the reason for it | `CONTRADICTED` |
+```
+Compare the two Stage 1 audit returns.
 
-That example is deliberately not telling you what the claim is, and it is not a row you can copy.
+Identify the material disagreements, unsupported cross-repository claims,
+and unresolved items.
 
-**The evidence column has to resolve.** If you cite a file and line, open it first — a citation
-that points at nothing is worse than no citation, because it looks like work. A row with three
-empty cells is a note to yourself, not a finding, and the grader counts populated cells for
-exactly that reason.
+Prepare candidate rows for docs/context-ledger.md using:
 
-### The rulings are yours — and only yours
+Claim | Asserted in | Evidence | Contradicted by
 
-The auditors return claims and evidence. **They do not touch this file.** Nothing is written into
-the ledger until both returns exist and you have ruled, and the `Human ruling` column is never
-filled in on your behalf.
+Do not make the Human ruling or update the ledger yet.
 
-Two questions decide what goes in it. They are the same for everyone in the room, and they are
-asked once both returns are on the table:
+Ask me DG-01 and DG-02, wait for my answers, then update the existing
+Context Ledger using only my rulings.
 
-> **DG-01** — The two audits disagree about at least one behaviour at the seam. For each
-> disagreement, which repository is authoritative, and what is your evidence for that ruling?
+Keep anything the available authority cannot resolve as UNKNOWN.
+```
+
+Claude will ask:
+
+> **DG-01** — For each material disagreement, what available authority resolves the decision, and
+> what evidence supports your ruling?
 >
-> **DG-02** — Which of the auditors' unknowns can be settled from the material you have, and which
-> stay UNKNOWN?
+> **DG-02** — Which unknowns can be resolved from the available authority, and which must remain
+> `UNKNOWN`?
 
-If answering either one would require authority nobody has, that is not a stalemate to break with
-a reasonable guess. Say so, record what is missing, and move on — the specification has an Open
-questions section for exactly this.
+Answer both questions in your own words.
 
-This part is yours, not the agents'. Three things to be deliberate about:
+**The auditors provide the evidence. You make the cross-repository ruling.**
 
-**A claim is what a repository believes about the world beyond itself.** Those are the rows that
-matter. A claim can be entirely true locally and false at the seam — that is precisely the failure
-mode you are hunting.
+If the available authority does not support a decision, keep it `UNKNOWN`. Do not replace missing
+authority with a plausible assumption.
 
-**`UNKNOWN` is a finish state.** If neither repository can settle something, it stays `UNKNOWN`.
-Do not resolve it because an empty cell looks unfinished.
+**⌂ You'll see** — [`docs/context-ledger.md`](docs/context-ledger.md) now contains the reconciled
+view across the service boundary:
 
-**When the two disagree, you rule.** Not the agent that sounded more certain. Confidence is not
-evidence, and an agent has no way to signal the difference.
+```
+   evidence-backed claims
+   visible contradictions
+   human rulings
+   unresolved items recorded as UNKNOWN
+```
 
-> ⚠ **Trap** — the tempting move here is to accept whichever account is more detailed. Detail is
-> a property of how much the agent had to say, not of how much it verified.
+### Review the evidence
 
-**Reveal:** compare your ledger against Prediction #2. What could the first agent not have known?
+Confirm that:
 
-*What you just proved: two independent accounts of a seam produce disagreements that one combined
-account would have hidden with plausible invention.*
+```
+  [ ] both repositories were audited independently
+  [ ] each auditor stayed within one repository
+  [ ] material claims are supported by inspectable evidence
+  [ ] reconciliation began only after both auditors returned
+  [ ] every material disagreement is resolved by evidence or recorded as UNKNOWN
+  [ ] docs/context-ledger.md reflects the human rulings
+  [ ] no unsupported payment behavior was inferred
+```
+
+**Reveal:** return to your prediction — what could one auditor not have established from its
+repository alone?
+
+*That is the reason for separating the two audit contexts: each agent provides a local
+evidence-backed view, while the cross-repository decision remains explicit and human-owned.*
 
 ### ✓ Done when
 
-```
-  [ ] both repositories were audited by separate agents, not one agent twice
-  [ ] the ledger has a row for the contract situation and a row for the business rule
-  [ ] every row has a ruling — none left blank
-  [ ] at least one row is still UNKNOWN, because you could not settle it honestly
-```
+Stage 1 is complete when:
 
-If every row came back VERIFIED and nothing is UNKNOWN, you have probably accepted an agent's
-confidence as evidence. Go back and ask which repository actually *proved* each claim.
+- both repository audits have returned;
+- material disagreements have been reconciled;
+- unresolved items are explicitly recorded as `UNKNOWN`; and
+- [`docs/context-ledger.md`](docs/context-ledger.md) reflects the evidence and your rulings.
 
 Run:
 

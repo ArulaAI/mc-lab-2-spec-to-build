@@ -280,7 +280,7 @@ boundary.*
 The evidence for the TTA → Payment Processor interaction is distributed across two repositories.
 
 You will audit each repository independently, compare the evidence returned from both sides, and
-make the cross-repository rulings yourself.
+make the cross-repository decisions yourself.
 
 ### ◆ Predict #2 — identify the blind spot
 
@@ -291,103 +291,42 @@ Before you begin:
 
 Write them down. You will revisit this after both audits return.
 
-### Step 1 · Run the two repository audits
+### Step 1 · Parallel repository audit
 
 The `repo-auditor` sub-agent is already provided at [`.claude/agents/repo-auditor.md`](.claude/agents/repo-auditor.md).
+Its constraints are its own — you supply only the two targets.
 
 Run this once in the parent Claude session:
 
 ```
-Run two repo-auditor sub-agents in parallel:
+Spawn one instance of @"workbench:repo-auditor (agent)" for @pgs-tta/
+and, in parallel, a second instance for @pgs-payment-processor/.
 
-1. Audit pgs-tta.
-2. Audit pgs-payment-processor.
-
-Keep each auditor read-only and restricted to its assigned repository.
-
-For the TTA → Payment Processor refund boundary, inspect the relevant
-contract/version, mappings, validation or business rules, error semantics,
-idempotency, correlation behavior, and tests.
-
-Support material claims with inspectable repository evidence.
-Anything that cannot be established locally must remain UNKNOWN.
-
-Return both audits separately using:
-
-REPOSITORY:
-CLAIMS:
-EVIDENCE:
-CONTRADICTIONS:
-UNKNOWNS:
-STOP_REQUIRED:
-
-CONTRADICTIONS means contradictions within the assigned repository
-or against authority explicitly available to that auditor.
-Do not infer contradictions with the other repository.
-
-Do not reconcile the two audits.
-Do not update docs/context-ledger.md.
-Do not make cross-repository ownership or rollout decisions.
+Return the two audit results separately. Do not reconcile them.
 ```
 
-**⌂ You'll see** — two independent audit returns in the same parent Claude session:
+**⌂ You'll see** — two separate `repo-auditor` results return to the parent Claude session, one for
+each repository. Wait until both have returned before moving on.
+
+### Step 2 · Reconcile the two audits
+
+[`docs/context-ledger.md`](docs/context-ledger.md) already exists in the starter repository. Use it
+as it is — do not create a new ledger, and do not change its structure.
+
+Once both audit results are available, run:
 
 ```
-TTA AUDIT
-
-REPOSITORY:
-CLAIMS:
-EVIDENCE:
-CONTRADICTIONS:
-UNKNOWNS:
-STOP_REQUIRED:
-```
-
-```
-PAYMENT PROCESSOR AUDIT
-
-REPOSITORY:
-CLAIMS:
-EVIDENCE:
-CONTRADICTIONS:
-UNKNOWNS:
-STOP_REQUIRED:
-```
-
-Wait until both auditors have returned before moving on.
-
-The audit results remain working evidence in the parent Claude session. You do not need to create
-separate report files.
-
-### Step 2 · Reconcile the two repository views
-
-The starter repository already contains [`docs/context-ledger.md`](docs/context-ledger.md). Do not
-create a new ledger or change its structure.
-
-The ledger records:
-
-```
-Claim | Asserted in | Evidence | Contradicted by | Status
-```
-
-Once both audits have completed, run:
-
-```
-Compare the two Stage 1 audit returns.
-
-Identify the material disagreements, unsupported cross-repository claims,
-and unresolved items.
+Using only the two Stage 1 audit results, identify the material
+cross-repository disagreements and unresolved claims.
 
 Prepare candidate rows for docs/context-ledger.md using:
 
 Claim | Asserted in | Evidence | Contradicted by
 
-Do not make the Human ruling or update the ledger yet.
+Do not re-audit either repository and do not resolve the disagreements yourself.
 
-Ask me DG-01 and DG-02, wait for my answers, then update the existing
-Context Ledger using only my rulings.
-
-Keep anything the available authority cannot resolve as UNKNOWN.
+Ask DG-01 and DG-02 exactly, wait for my answers, then update the existing
+Context Ledger using only my answers. Keep unresolved items as UNKNOWN.
 ```
 
 Claude will ask:
@@ -400,19 +339,10 @@ Claude will ask:
 
 Answer both questions in your own words.
 
-**The auditors provide the evidence. You make the cross-repository ruling.**
+**The auditors provide the evidence. You make the cross-repository decision.**
 
 If the available authority does not support a decision, keep it `UNKNOWN`. Do not replace missing
 authority with a plausible assumption.
-
-**⌂ You'll see** — [`docs/context-ledger.md`](docs/context-ledger.md) now contains the reconciled
-view across the service boundary:
-
-```
-   evidence-backed claims
-   visible contradictions
-   unresolved items recorded as UNKNOWN
-```
 
 ### Review the evidence
 
@@ -420,11 +350,10 @@ Confirm that:
 
 ```
   [ ] both repositories were audited independently
-  [ ] each auditor stayed within one repository
-  [ ] material claims are supported by inspectable evidence
-  [ ] reconciliation began only after both auditors returned
+  [ ] each audit is supported by repository evidence
+  [ ] reconciliation started only after both audit results were available
   [ ] every material disagreement is resolved by evidence or recorded as UNKNOWN
-  [ ] no unsupported payment behavior was inferred
+  [ ] docs/context-ledger.md reflects your decisions
 ```
 
 **Reveal:** return to your prediction — what could one auditor not have established from its
@@ -440,7 +369,7 @@ Stage 1 is complete when:
 - both repository audits have returned;
 - material disagreements have been reconciled;
 - unresolved items are explicitly recorded as `UNKNOWN`; and
-- [`docs/context-ledger.md`](docs/context-ledger.md) reflects the evidence and your rulings.
+- [`docs/context-ledger.md`](docs/context-ledger.md) reflects the evidence and your decisions.
 
 Run:
 

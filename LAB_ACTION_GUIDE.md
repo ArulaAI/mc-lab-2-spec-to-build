@@ -324,20 +324,7 @@ Prepare candidate rows for docs/context-ledger.md using:
 Claim | Asserted in | Evidence | Contradicted by
 
 Do not re-audit either repository and do not resolve the disagreements yourself.
-
-Ask DG-01 and DG-02 exactly, wait for my answers, then update the existing
-Context Ledger using only my answers. Keep unresolved items as UNKNOWN.
 ```
-
-Claude will ask:
-
-> **DG-01** — For each material disagreement, what available authority resolves the decision, and
-> what evidence supports your ruling?
->
-> **DG-02** — Which unknowns can be resolved from the available authority, and which must remain
-> `UNKNOWN`?
-
-Answer both questions in your own words.
 
 **The auditors provide the evidence. You make the cross-repository decision.**
 

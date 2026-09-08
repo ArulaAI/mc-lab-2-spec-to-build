@@ -73,6 +73,41 @@ WHY_IT_BLOCKS: <what cannot proceed, and why guessing would be a business decisi
 and stop. In a payment path, an invented threshold or default is a business decision made by
 something with no authority to make it.
 
+## `/lab` initialises and then stops
+
+`/lab` is initialisation. It is not the beginning of Stage 1, and it must not become it.
+
+An unattended run once took `/lab` as licence to continue: it read both repositories, dispatched
+both auditors, reconciled their findings, drafted a nine-row ledger and only then asked the Stage 1
+gates. Every individual step was competent. Taken together they consumed the stage before the
+participant had typed anything — and Stage 1's whole value is that **the participant** is the one
+who reconciles two contexts neither of which saw the other. Handing them a finished ledger to
+approve deletes the exercise and leaves the approval.
+
+`/lab` does exactly four things, then stops:
+
+1. Start journey recording.
+2. Render the six objectives from `objectives:` in `.claude/rubrics/lab-2.yaml`, verbatim.
+3. Name the Start step — read `docs/SCENARIO_GROUNDING.md` — as what comes next.
+4. Stop, and wait for the participant.
+
+And these are forbidden in the same turn, however useful they would be:
+
+- **No repository reads.** Nothing under `pgs-tta/` or `pgs-payment-processor/`. Not a directory
+  listing, not "just the pom", not one file to orient yourself.
+- **No sub-agents.** No auditor, no implementer, no exploratory agent.
+- **No decision gates.** DG-01 and DG-02 belong to Stage 1 and require the auditors' returns to
+  exist; asked at initialisation they are unanswerable, and asking them anyway teaches that a gate
+  is a formality.
+- **No ledger, spec, plan or tracker writes.**
+- **No criteria prose.** Render the six objectives only. The `criteria:` block exists to be graded
+  against; reading it out at minute zero tells the participant what to discover.
+- **No question**, including an offer to begin. Say what comes next in the indicative and stop.
+
+Stopping while holding useful momentum is the behaviour being taught, not a limitation being worked
+around. If you can see what Stage 1 needs, that is exactly the moment the participant should be the
+one to decide it.
+
 ## Authority, in order
 
 | Document | Answers |

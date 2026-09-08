@@ -187,6 +187,10 @@ Run:
 /lab
 ```
 
+`/lab` starts recording, prints the six objectives, and **stops**. That is all it should do. If
+your session instead starts reading the two services or dispatching agents, stop it: Stage 1 is
+yours to run, and a ledger handed to you finished is a ledger you did not reconcile.
+
 **Once `/lab` has run**, confirm a journey event actually landed — not merely that the command
 returned. A silent journey failure surfaces at Stage 6, which is far too late to fix it.
 

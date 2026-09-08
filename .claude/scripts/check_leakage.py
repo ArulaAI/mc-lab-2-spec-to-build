@@ -99,13 +99,15 @@ ALLOW = [
 # decisions belong to the coordinating engineer. Suppressing the hit would hide a real question;
 # rewriting the card would change approved design without a ruling. So it is reported as PENDING on
 # every run, in its own section, until a ruling is recorded here.
-PENDING = [
-    ("docs/ESSENTIAL_OUTCOMES.md", "finding-prose",
-     "The eight outcomes name the findings the participant is meant to reach. That may be "
-     "deliberate -- the card's stated job is to say what 'done' looks like -- or it may be the "
-     "same leak the rubric had. DESIGN DECISION REQUIRED: is the outcomes card a sanctioned "
-     "channel for stating target findings, or must it become evidence-shaped like the rubric?"),
-]
+# Ruled 2026-09-08 by the coordinating engineer, so this list is empty rather than deleted: the
+# machinery stays wired for the next question of this kind.
+#
+#   docs/ESSENTIAL_OUTCOMES.md -- KEEP the card, REMOVE the answers. It may state which artifacts
+#   must exist and what good evidence looks like in them. It may not state the seeded findings, the
+#   ownership decisions, the rollout answer, the endpoint answer, the retry identity, the error
+#   mapping, or the expected no-diff target. Rewritten accordingly, and the rules below now hold it
+#   to that: outcome 2 describes the SHAPE of a disagreement without naming one.
+PENDING: list = []
 
 
 def scan(root: pathlib.Path) -> tuple[list, list]:

@@ -18,6 +18,9 @@ Assemble the repo-scoped validator briefs.
    That exclusion is structural rather than a matter of discretion: the script assembles from a
    fixed allowlist and has no path to a conversation. Say so — the guarantee is the lesson.
 
+Do not ask the participant any question. This command assembles evidence; the human decisions on
+the core path are the decision gates in `.claude/decision-gates.yaml`.
+
 Do not dispatch the validators yourself, and do not summarise or edit a brief. The participant
 dispatches two fresh validators in parallel, one brief each, with read and test tools and no write
 tools.

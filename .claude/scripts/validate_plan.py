@@ -32,6 +32,10 @@ BRIEFS = {
 
 BRIEF_SECTIONS = [
     "outcome",
+    # A contract that does not require the agent to verify its own repository leaves verification
+    # to the participant, which is the duplication Stage 4 exists to remove -- and leaves the
+    # Stage 5 brief with no verification evidence to carry.
+    "verification required",
     "authoritative inputs",
     "repository scope",
     "allowed areas",
@@ -242,6 +246,8 @@ OQ-1 remains open and is escalated, not answered.
 ## Acceptance criteria owned
 AC-1 AC-2 AC-3 AC-4 AC-5
 NO_DIFF_EXPECTED: false
+## Verification required
+run the repository's full Maven verification before returning
 ## Dependencies on the other repository
 ## Expected return shape
 ## Stop conditions
@@ -264,6 +270,7 @@ Stop and report if the specification is silent.
             (root / rel).write_text("## Outcome\n## Authoritative inputs\n## Repository scope\n"
                                     "## Allowed areas\n## Excluded areas\n## Tools allowed\n"
                                     "## Acceptance criteria owned\nAC-1\nNO_DIFF_EXPECTED: false\n"
+                                    "## Verification required\nmvn verify\n"
                                     "## Expected return shape\n## Stop conditions\nStop.\n")
         names = [c.name for c in validate(root) if not c.passed]
         results.append(("an uncovered acceptance criterion is refused",

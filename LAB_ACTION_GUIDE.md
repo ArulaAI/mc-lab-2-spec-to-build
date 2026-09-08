@@ -387,7 +387,7 @@ asked once both returns are on the table:
 > disagreement, which repository is authoritative, and what is your evidence for that ruling?
 >
 > **DG-02** — Which of the auditors' unknowns can be settled from the material you have, and which
-> stay `UNKNOWN`?
+> stay UNKNOWN?
 
 If answering either one would require authority nobody has, that is not a stalemate to break with
 a reasonable guess. Say so, record what is missing, and move on — the specification has an Open

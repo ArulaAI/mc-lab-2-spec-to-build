@@ -75,6 +75,14 @@ ALLOW = [
      "the document's purpose is to explain the three grounding layers, which requires the words"),
     ("docs/PGS_DECISIONS.md", "seed-vocab", None,
      "the decision register cites its own construction; it is sourced authority, not a hint"),
+    # check_seed_intact must know which file to hash, so the path cannot be hidden without breaking
+    # the check. It also reveals nothing: `specs/OUT_OF_SCOPE.md:15` publishes the Void exclusion as
+    # authority the participant is meant to read, and the file is visible in the tree regardless.
+    # What the fixture used to add on top of that -- that this is a seed, and that the correct action
+    # is no diff -- is what was removed.
+    (".claude/fixtures/scope-boundary-untouched.json", "seeded-symbol", "VoidTransactionSupport",
+     "the grader must name the file it hashes; OUT_OF_SCOPE.md already publishes the exclusion "
+     "and the file is visible in the tree, so the path discloses nothing"),
     ("LAB_ACTION_GUIDE.md", "finding-prose", "Adjacency is not authorisation",
      "states the general principle the stage teaches, attached to no file and no finding; this is "
      "the lesson, and removing it to satisfy a scanner would delete the pedagogy"),

@@ -569,7 +569,7 @@ Run:
 /hand-off
 ```
 
-### ⏸ Q&A pause — 3 min
+### ⏸ Q&A pause — 4 min
 
 Domain, spec, or gate questions. Environment problems go to the **parking lot** instead of into
 the room.
@@ -958,7 +958,7 @@ Run:
 /hand-off
 ```
 
-### ⏸ Q&A pause — 3 min
+### ⏸ Q&A pause — 4 min
 
 ---
 

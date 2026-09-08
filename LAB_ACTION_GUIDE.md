@@ -367,7 +367,7 @@ create a new ledger or change its structure.
 The ledger records:
 
 ```
-Claim | Asserted in | Evidence | Contradicted by | Human ruling | Status
+Claim | Asserted in | Evidence | Contradicted by | Status
 ```
 
 Once both audits have completed, run:

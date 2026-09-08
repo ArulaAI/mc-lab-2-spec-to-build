@@ -313,18 +313,7 @@ each repository. Wait until both have returned before moving on.
 [`docs/context-ledger.md`](docs/context-ledger.md) already exists in the starter repository. Use it
 as it is — do not create a new ledger, and do not change its structure.
 
-Once both audit results are available, run:
-
-```
-Using only the two Stage 1 audit results, identify the material
-cross-repository disagreements and unresolved claims.
-
-Prepare candidate rows for docs/context-ledger.md using:
-
-Claim | Asserted in | Evidence | Contradicted by
-
-Do not re-audit either repository and do not resolve the disagreements yourself.
-```
+Once both audit results are available, update [`docs/context-ledger.md`](docs/context-ledger.md).
 
 **The auditors provide the evidence. You make the cross-repository decision.**
 

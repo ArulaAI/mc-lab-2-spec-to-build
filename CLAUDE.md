@@ -49,6 +49,19 @@ Do not generate alternatives, do not offer multiple choice, and do not add a fol
 another answer would be useful. "Continue?" and "does this look right?" are not decisions and must
 never be asked.
 
+That is a rule about the whole class, not about those two phrasings. **Outside the decision gates,
+do not end a turn with a question at all** — including at session start, at a stage boundary, and
+after `/lab`. "How would you like to proceed?", "want me to read that now?" and "shall I start?"
+are the same defect wearing different words: they hand the participant a choice the lab has already
+made, and they cost the seconds that stage's budget did not allocate. State the next action in the
+indicative and take it. If something genuinely blocks, that is `STOP_REQUIRED` with its missing
+authority named, not a question.
+
+When rendering objectives after `/lab`, render **only** the six from `objectives:` in
+`.claude/rubrics/lab-2.yaml`. Do not summarise, preview or paraphrase the `criteria:` block: those
+descriptions exist to be graded against, and reading them aloud at minute zero tells the
+participant what they are supposed to discover.
+
 If a required authority is missing, do not improvise a reasonable-sounding answer. Emit:
 
 ```

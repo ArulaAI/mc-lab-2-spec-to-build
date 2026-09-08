@@ -56,12 +56,12 @@ criteria:
     check: "file_table_rows_gte:docs/context-ledger.md:6"
 
   - id: ledger-contract-drift
-    description: "The contract-version drift is identified, with evidence and a ruling"
+    description: "A cross-repository disagreement is reconciled with evidence and a human ruling"
     max_score: 5
     check: "file_table_row_contains_all:docs/context-ledger.md:contract"
 
   - id: ledger-divergent-rule
-    description: "The divergent business rule is identified, with evidence and a ruling"
+    description: "A second, different class of disagreement is reconciled the same way"
     max_score: 5
     check: "file_table_row_contains_all:docs/context-ledger.md:refund"
 
@@ -79,7 +79,7 @@ criteria:
     check: "json_true:specs/spec.status.json:valid"
 
   - id: spec-open-question-intact
-    description: "The unresolved derivation question is still recorded as open, not answered"
+    description: "A question the source material does not settle is still recorded as open"
     max_score: 6
     check: "file_contains:specs/refund-seam-phase1.spec.md:OQ-1"
 
@@ -106,9 +106,9 @@ criteria:
 
   # ------------------------------------------------------------------------------- build (20)
   - id: build-void-resisted
-    description: "Out-of-scope Void code is untouched -- the correct action was no diff"
+    description: "Code excluded by OUT_OF_SCOPE.md is left untouched"
     max_score: 8
-    check: "seed_intact:seed-07-void-adjacency"
+    check: "seed_intact:scope-boundary-untouched"
 
   - id: build-pair-green
     description: "Pair verification was run and recorded green"

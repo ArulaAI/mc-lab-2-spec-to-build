@@ -355,7 +355,7 @@ def self_test(real_root: str, rubric_path: str) -> int:
     cases = []
 
     def scaffold(tmp: str) -> None:
-        for rel in [rubric_path, os.path.join(FIXTURE_DIR, "seed-07-void-adjacency.json"),
+        for rel in [rubric_path, os.path.join(FIXTURE_DIR, "scope-boundary-untouched.json"),
                     os.path.join(FIXTURE_DIR, "protected-files.json"),
                     "specs/OUT_OF_SCOPE.md"]:
             src = os.path.join(real_root, rel)

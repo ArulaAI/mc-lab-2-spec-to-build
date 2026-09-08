@@ -37,7 +37,8 @@ inside either one — which is why the central fact of the lab is:
 - **JDK 17 or newer.** A 21 JDK compiling to the Java 17 target is the documented PGS pattern and
   is what this lab is built and tested against.
 - **Maven 3.9+**
-- **Python 3.9+**, with PyYAML for the grader (`python3 -m pip install pyyaml`)
+- **Python 3.9+**, with PyYAML for the grader
+  (`bash .claude/scripts/run -m pip install pyyaml`)
 - **Git**
 - The `workbench` plugin, for `/lab`, `/journey`, `/hand-off`, the planner and the
   `code-to-spec-validator`

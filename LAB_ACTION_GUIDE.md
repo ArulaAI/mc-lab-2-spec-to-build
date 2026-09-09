@@ -780,21 +780,6 @@ its contract named, and does `VERIFICATION_RESULT` match what the agent says it 
 that does not match its own build output is worse than a red one, because it removes the reason
 anyone would look.
 
-### Three things that will actually happen
-
-> ⚠ **You will be tempted to dispatch one agent for both repositories.** Don't. The moment you
-> give one agent both repos, you have re-created the visibility problem you spent Stage 1 avoiding.
-> One agent per repository, in the rollout order you decided in Stage 3.
-
-> ⚠ **An agent will offer to fix something in the other repository.** Refuse it. That is the seam,
-> and the seam is yours. An agent that can reach across the boundary has no way to know what it
-> would break, because it cannot see the other side.
-
-> ⚠ **An agent will find nearby code that looks reusable and unfinished.** It compiles. It shares
-> infrastructure with the refund path. It looks abandoned mid-change.
->
-> **Adjacency is not authorisation.** If it is out of scope, the correct action is no diff plus a
-> recorded reason.
 
 ### Verify as you go
 

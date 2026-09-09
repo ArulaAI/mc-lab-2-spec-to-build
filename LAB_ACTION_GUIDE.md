@@ -293,8 +293,9 @@ Write them down. You will revisit this after both audits return.
 
 ### Step 1 · Parallel repository audit
 
-The `repo-auditor` sub-agent is already provided at [`.claude/agents/repo-auditor.md`](.claude/agents/repo-auditor.md).
-Its constraints are its own — you supply only the two targets.
+The `repo-auditor` sub-agent comes from the workbench plugin — as does every agent, command and
+skill this lab uses. There is nothing to install or author here. Its constraints are its own; you
+supply only the two targets.
 
 Run this once in the parent Claude session:
 

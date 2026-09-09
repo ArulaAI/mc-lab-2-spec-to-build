@@ -362,15 +362,25 @@ Run:
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-*The spec is broken. The gate will prove it. Your job is to fix it without inventing anything.*
+*The current specification is not yet ready to build from. Your job is to make it precise without
+inventing missing behavior.*
 
 **Concept** — spec-as-context and readiness gates
-**You leave with** — a specification an agent can build from without guessing
+**You leave with** — a specification an implementation agent can work from without guessing
 
-> **Whatever stays vague here becomes an invention later.** Not might. Does.
+> **If the specification is vague, the implementation agent must either stop or make an unsupported
+> assumption.**
 
-The validated specification is the bounded authority every agent in Stage 4 will build from. It
-is the highest-leverage document in the lab, and right now it is not good enough.
+### Why
+
+Stage 1 established what the two repositories currently say about the service boundary.
+
+Stage 2 turns that evidence into a clear specification for the work ahead.
+
+You will use a deterministic readiness gate to identify structural gaps, improve the specification
+using only the authority available in the lab, and keep anything unsupported explicitly unresolved.
+
+### Step 1 · Check the specification
 
 Run:
 
@@ -378,111 +388,154 @@ Run:
 /check-spec
 ```
 
-It will refuse the specification and name the failing checks.
+`/check-spec` evaluates the specification against the structural readiness rules in
+[`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md). It checks things such as:
 
-The twelve checks it runs are the twelve in
-[`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md), one for one. They are all
-structural — is a section present, does a criterion carry an identifier, is an owner named. None
-of them can tell you the specification is *correct*, which is why the status file records
-`"semantic_authority": "human-reviewed"` instead of implying a machine approved the content.
+- required sections are present;
+- acceptance criteria have identifiers;
+- acceptance criteria describe observable outcomes;
+- required ownership information is present; and
+- required decision areas are represented.
 
-**⌂ You'll see** — the shipped specification fails six of the twelve:
+It does not decide whether the specification is semantically correct.
 
-```
-  [PASS] required sections present                           all present
-  [FAIL] metadata names an owner                             Owner is unset or marked unassigned
-  [FAIL] acceptance criteria describe observable outcomes    unobservable phrasing: handled correctly
-  [FAIL] every contested decision has a named owner          no owner named for: ...
-  [FAIL] idempotency section is implementable                does not state: ...
-  ...
-  6/12 structural checks  ->  DRAFT
-```
-
-By the end of this stage that last line reads `12/12 structural checks  ->  READY`. It is a
-deterministic script, not a model, so that number is the same for everyone in the room. If yours
-says READY and your neighbour's says DRAFT, you have a real difference — not a formatting one.
-
-Run the gate before you start editing — the failing check names are your editing queue. Work
-through them with your agent and re-run until all twelve pass.
-
-### The facilitator demonstrates — one weak requirement becoming testable
+**⌂ You'll see** — a structural verdict showing which checks need attention:
 
 ```
-   ✗  WEAK
-      "Handle duplicate refunds correctly."
-
-   ✓  BUILDABLE
-      "When Payment Processor identifies a duplicate logical refund, the TTA
-       boundary preserves the duplicate-conflict semantics, and the downstream
-       repository contains no second refund record."
+[PASS] ...
+[FAIL] ...
+[FAIL] ...
+...
+N/12 structural checks  ->  DRAFT
 ```
 
-Look at what actually changed. The second version names **who decides**, **what the caller
-observes**, and **what must be true of stored state afterwards**. Three things a test can check.
+Use the failing checks as your editing queue.
 
-The first names none of them. The word "correctly" was carrying the entire requirement, and
-"correctly" is exactly where an agent inserts its own judgement.
+Because `/check-spec` is deterministic, the same specification produces the same structural result.
+This is different from model-generated output, where wording and reasoning paths may vary.
 
-### ▶ Your turn — harden the rest
+### The facilitator demonstrates · Make one requirement buildable
 
-The specification carries several more weaknesses of the same shape. Work through them with your
-agent and re-run the gate until it reports **READY**.
+Consider:
 
-Three rules while you do:
+```
+✗ WEAK
 
-**1 · Do not close an open question by answering it.**
+"Handle duplicate refunds correctly."
+```
 
-`OQ-1` asks how the idempotency key is derived in production. The source material states the
-duplicate rule and the status code, and never states the derivation.
+Now compare it with:
 
-> ⚠ **Trap — the strongest one in this lab.** Your agent will offer you a reasonable-sounding
-> derivation. It will look like diligence. In payments, an invented key derivation is a business
-> decision made by something with no authority to make it — and it will read as perfectly sensible
-> right up until it moves the wrong amount of money.
->
-> It stays open. Refusing to answer it is the single most important thing you do today.
+```
+✓ BUILDABLE
 
-**2 · Do not weaken the out-of-scope list to make something fit.** It is write-protected, so the
-gate will stop you. The instinct is the thing worth noticing in yourself.
+"When Payment Processor identifies a duplicate logical refund, the TTA
+boundary preserves the duplicate-conflict semantics, and the downstream
+repository contains no second refund record."
+```
 
-**3 · Everything you add traces to `docs/PGS_DECISIONS.md`** — as a PGS fact, or as an explicitly
-labelled lab representation. Nothing gets invented into existence.
+The second version gives us something observable. It tells us:
 
-### Human gate before you move on
+- what condition triggers the behavior;
+- what the caller should observe; and
+- what must be true of the resulting state.
 
-Two fixed questions close this stage. Same wording for everyone, asked once the gate reports
-READY so the criteria are stable:
+The first version leaves the meaning of "correctly" for the implementation agent to decide.
 
-> **DG-03** — For each open question the specification carries, does the supplied source material
-> answer it? Name the source you checked, and say what you are recording.
->
-> **DG-04** — Which acceptance criteria need evidence from both repositories, and which belong to
-> exactly one?
+### Step 2 · Harden the specification
 
-DG-04 is not bookkeeping. That assignment becomes the `Acceptance criteria owned` field in each
-Stage 3 contract, and it is what lets Stage 5 judge each repository against its own criteria
-instead of reviewing one combined diff.
+Use the gate failures to improve
+[`specs/refund-seam-phase1.spec.md`](specs/refund-seam-phase1.spec.md).
 
-Then read your hardened specification once more and ask:
+Run:
 
-> **Did we invent any PGS behaviour to get here?**
+```
+Using the /check-spec failures, improve
+@specs/refund-seam-phase1.spec.md.
 
-If yes, take it out and put the question back.
+Use only the supplied authority for substantive decisions.
+Do not resolve an open question without supporting evidence.
+If it cannot be resolved, keep it explicitly open.
 
-The gate is structural. It tells you the specification is well-formed, never that it is *right* —
-which is why the status file records `"semantic_authority": "human-reviewed"` rather than quietly
-implying a machine approved the content.
+Re-run /check-spec after the changes.
+```
 
-*What you just built: the single document every agent in Stage 4 will treat as truth. Everything
-vague you left in it will become an invention you did not authorise.*
+The failing gate checks tell you what structure needs attention. The available authority determines
+what you are allowed to add.
+
+### Three rules while you work
+
+**1 · Do not turn an open question into an assumption.**
+For every open question, ask: *can I point to supplied authority that actually answers this?* If
+yes, use that evidence. If no, keep the question open. A reasonable-sounding answer is not
+authority.
+
+**2 · Do not change the rules to make the specification pass.**
+Do not weaken scope, non-negotiables, or other governing authority simply to satisfy the readiness
+gate. The objective is to improve the specification within the established boundary, not redefine
+the boundary until the checks become green.
+
+**3 · Every substantive addition needs a source.**
+Anything you add about payment behavior must be supported by the available authority established
+for the lab. Do not create new behavior because it seems technically sensible.
+
+### Step 3 · Re-run the readiness gate
+
+Run:
+
+```
+/check-spec
+```
+
+Continue addressing the structural failures until the specification reports:
+
+```
+12/12 structural checks  ->  READY
+```
+
+`READY` means the specification satisfies the structural completeness bar. It does not mean a
+machine has decided that every business or payment decision is correct.
+
+> **The gate validates structure. Engineers validate meaning.**
+
+### Review the specification
+
+Once `/check-spec` reports `READY`, review the specification before moving on.
+
+Ask:
+
+> Did we add anything that we cannot trace to available authority?
+
+Then review the acceptance criteria and ask:
+
+> What evidence will be required to prove each criterion: TTA, Payment Processor, or both?
+
+You will use that distinction in Stage 3 when the work is divided into repository-specific agent
+contracts.
+
+If a question still lacks authority, leave it open. Do not resolve it simply because the structural
+gate is green.
+
+### ◆ Reveal
+
+Compare the specification you started with against the version that now reports `READY`.
+
+Where was the original wording forcing an implementation agent to make a decision that the
+specification had not actually made?
+
+That gap is the reason for treating the specification as part of the agent's working context rather
+than as documentation written after implementation.
 
 ### ✓ Done when
 
+Stage 2 is complete when:
+
 ```
   [ ] /check-spec reports READY
-  [ ] OQ-1 is still listed as open — you did not answer it
-  [ ] every ownership row names exactly one service
-  [ ] anything you added traces to a line you can point at in PGS_DECISIONS.md
+  [ ] acceptance criteria describe observable, testable outcomes
+  [ ] every resolved question is supported by available authority
+  [ ] unresolved questions remain explicitly open
+  [ ] no unsupported payment behavior was added to make the gate pass
 ```
 
 Run:
@@ -493,8 +546,10 @@ Run:
 
 ### ⏸ Q&A pause — 4 min
 
-Domain, spec, or gate questions. Environment problems go to the **parking lot** instead of into
-the room.
+Use this pause for questions about the specification, authority, acceptance criteria, or the
+readiness gate.
+
+Environment-specific issues go to the **parking lot** so they do not consume the shared lab time.
 
 ---
 

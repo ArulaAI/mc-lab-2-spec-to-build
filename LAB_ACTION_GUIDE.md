@@ -337,9 +337,7 @@ supply only the two targets.
 Run this once in the parent Claude session:
 
 ```
-Spawn one instance of @"workbench:repo-auditor (agent)" for @pgs-tta/
-and, in parallel, a second instance for @pgs-payment-processor/.
-
+Spawn one @"workbench:repo-auditor (agent)" subagent for @pgs-tta/ and, in parallel, another @"workbench:repo-auditor (agent)" subagent for @pgs-payment-processor/.
 Return the two audit results separately. Do not reconcile them.
 ```
 

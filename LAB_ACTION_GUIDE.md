@@ -544,28 +544,21 @@ Environment-specific issues go to the **parking lot** so they do not consume the
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-*The specification tells you what must be true. Now decide how that work should be divided and
-executed across the two repositories.*
+*Turn the validated specification into an executable plan for two bounded implementation agents.*
 
 **Concept** — cross-repository planning and bounded agent contracts
 **You leave with** — one orchestration plan and two repository-specific implementation briefs
 
-> **A plan that names tasks but not boundaries is a task list, not an orchestration design.**
+> **Plan only the scope authorised in Stage 2. Open authority items remain outside implementation.**
 
-### Why
+### What you carry forward
 
-Stage 2 carried forward one artifact: [`specs/refund-seam-phase1.spec.md`](specs/refund-seam-phase1.spec.md).
-That specification is the build authority for everything below.
+[`specs/refund-seam-phase1.spec.md`](specs/refund-seam-phase1.spec.md)
 
-Its open authority items stay open. They are not authorised for implementation, they do not become
-tasks, and no brief may hand one to an agent to decide.
+The specification defines what must be true. Stage 3 defines how that authorised work is divided,
+bounded, verified, and sequenced across the two repositories.
 
-No implementation agents are dispatched here — that is Stage 4. Your job now is to write the
-contracts they will work from.
-
-### Your challenge
-
-Produce three artifacts:
+### Produce three artifacts
 
 ```
    docs/plans/orchestration-plan.md
@@ -573,18 +566,17 @@ Produce three artifacts:
    docs/agent-briefs/processor-implementation-brief.md
 ```
 
-**The orchestration plan** answers:
+**The orchestration plan records:**
 
 ```
-   which resolved acceptance criteria are in scope
-   which repository is responsible for each
-   which criteria need evidence from both repositories
-   what dependencies exist between the two
-   what rollout order you propose, and why
-   which Stage 2 open authority items remain excluded
+   in-scope acceptance criteria
+   repository responsibility
+   cross-repository dependencies
+   rollout order and rationale
+   Stage 2 open authority items that remain excluded
 ```
 
-**Each implementation brief** is a contract, and carries only what varies by task:
+**Each implementation brief contains:**
 
 ```
    Repository                     Excluded areas
@@ -594,21 +586,14 @@ Produce three artifacts:
    Allowed repository scope
 ```
 
-**Acceptance criteria owned** is the per-repository assignment, and the label matters: the gate
-and the grader both read that exact heading. Stage 5 judges each repository against its own
-criteria, so a criterion nobody owns is a criterion nobody validates.
+Reference acceptance criteria by ID rather than rewriting them. The same criterion may appear in
+both briefs when both repositories must provide local evidence for it. `NO_DIFF_EXPECTED: true`
+still requires verification.
 
-Tool permissions and the return shape are not in that list on purpose. Both are fixed in the
-`repo-implementer` agent definition, the same for every task. Restating an invariant in a brief is
-how the two drift apart — and the brief is the one the agent obeys.
-
-**Every brief carries this stop condition:**
+Every brief carries this stop condition:
 
 > *If completing the assigned work requires behaviour that the validated specification does not
 > authorise, stop and report it rather than choosing the behaviour.*
-
-That single line is what prevents an agent inventing a business rule at minute twenty-two, in a
-file nobody is watching closely, with complete confidence.
 
 ### Planning rules
 
@@ -616,22 +601,14 @@ file nobody is watching closely, with complete confidence.
    1  Plan only the resolved Stage 2 scope.
    2  Every in-scope acceptance criterion must be assigned.
    3  Open authority items must not become implementation work.
-   4  Each brief defines both its working boundary and its stop boundary.
+   4  Keep each implementation agent inside its assigned repository.
 ```
 
-Two consequences worth stating plainly:
-
-**A criterion may be assigned to both repositories** when each side has to produce its own local
-evidence for it. That is a legitimate split, not a conflict.
-
-**`NO_DIFF_EXPECTED: true` does not remove the obligation to verify.** A repository can own criteria
-and expect to change no code — the job then becomes proving those criteria are already satisfied,
-with evidence from a verification run. Owning no criteria at all is a different claim, and it leaves
-that repository's Stage 5 validator with nothing to judge.
+The orchestration plan must record the proposed rollout order and rationale based on the
+compatibility constraints already established in the specification. Stage 3 records the plan;
+Stage 5 verifies the pair.
 
 ### Optional — a planner assist
-
-You do not have to use it. If you want a starting decomposition:
 
 ```
 Using @specs/refund-seam-phase1.spec.md, propose a repository split and
@@ -642,64 +619,39 @@ Keep Stage 2 open authority items excluded.
 Return a planning proposal only. Do not write code or resolve authority gaps.
 ```
 
-The planner proposes. You own the final plan and both briefs — which service is authoritative,
-which contract version you target, and what order things land in are yours.
+Use the proposal as input. The final plan and briefs remain yours.
 
-### The rollout question
-
-Propose a rollout sequence consistent with the compatibility constraints already established in the
-validated specification. Stage 5 will verify that assumption; Stage 3 does not prove it.
-
-The question to answer:
-
-> **What has to be true while one side has changed and the other side has not?**
-
-Notice what that is *not*. It is not "which side matters more". A change can be perfectly correct in
-its final state and still be unsafe halfway there.
-
-If the specification left the contract-version question open, it stays open here. Choosing a version
-to make the plan tidy is resolving an authority gap you were not given.
-
-### ◆ Predict #3 — reopen Prediction #1
-
-You sealed an answer at the Start step, blind. You now know the seam and the specification.
-
-> **Would you keep your original rollout order? What evidence changed or strengthened your
-> reasoning?**
-
-Write the revision next to the original. Keep both — the gap between them is the lesson.
-
-### Before you run the gate
-
-Read your two briefs side by side and ask:
-
-> **If these briefs were handed to two engineers who could not talk to each other, would the
-> resulting work still line up at the service boundary?**
-
-Look specifically for:
-
-```
-   [ ] an acceptance criterion nobody was assigned
-   [ ] the same responsibility claimed by both repositories
-   [ ] an open authority item that has quietly become implementation work
-   [ ] scope in one brief that reaches into the other repository
-   [ ] a dependency between the two that neither brief accounts for
-```
-
-### Run the gate
+### Validate the plan
 
 ```
 /check-plan
 ```
 
-Read the failures, refine the artifacts, and run it again. For the same plan artifacts,
-`/check-plan` produces the same result — it is a script, not a judgement.
+It validates plan structure:
 
-What it establishes is structure: that a decision was made and recorded. It cannot tell you the
-rollout order is *right*, or that ownership landed on the correct service. Those stay yours.
+```
+   both repositories are represented
+   every in-scope AC is assigned
+   no unsupported AC was introduced
+   open Stage 2 authority items remain excluded
+   repository boundaries are defined
+   verification and stop conditions are present
+   rollout order and rationale are recorded
+```
 
-*What you just decided: who changes first, what each agent may touch, and when it must stop. Every
-boundary you drew here is a boundary the agents cannot cross in Stage 4.*
+**⌂ You'll see**
+
+```
+  [PASS] both repositories are represented
+  [PASS] rollout order and rationale are present
+  [FAIL] every in-scope acceptance criterion is assigned    missing: AC-4
+  ...
+  N/M structural checks  ->  DRAFT
+```
+
+Use any failures as the editing queue and rerun `/check-plan` until it reports `READY`.
+
+> **The gate validates plan structure. Engineering judgment owns the plan.**
 
 ### ✓ Done when
 
@@ -707,8 +659,8 @@ boundary you drew here is a boundary the agents cannot cross in Stage 4.*
   [ ] /check-plan reports READY
   [ ] every in-scope acceptance criterion is assigned
   [ ] Stage 2 open authority items remain outside implementation scope
-  [ ] both briefs define allowed scope, excluded scope, verification, and stop conditions
-  [ ] rollout order is recorded with its rationale
+  [ ] both briefs define scope, exclusions, verification, and stop conditions
+  [ ] rollout order and rationale are recorded
 ```
 
 Run:

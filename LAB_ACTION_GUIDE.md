@@ -174,7 +174,7 @@ Must end with **"Setup complete"**. If it does not, flag it now — not at minut
 Before running preflight, ensure your workbench plugin is on the version required for this lab:
 
 ```
-/plugin marketplace update mastercard-workbench
+/plugin update workbench@mastercard-workbench
 ```
 To verify :
 ```

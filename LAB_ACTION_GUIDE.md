@@ -161,9 +161,26 @@ will actually need.
 > See [`docs/ESSENTIAL_OUTCOMES.md`](docs/ESSENTIAL_OUTCOMES.md) — we grade what you concluded and
 > what you can show for it, never whether your screen matches anyone else's.
 
+### Update the workbench
+
+Before running preflight, ensure your workbench plugin is on the version required for this lab:
+
+```
+/plugin marketplace update mastercard-workbench
+```
+To verify :
+```
+/reload-plugins
+```
+```
+/plugin list
+```
+
+The final `/plugin list` confirms the update applied. If the list is empty or shows an unexpected version, ask the facilitator before continuing.
+
 ### Preflight
 
-```bash
+```
 bash .claude/scripts/run scripts/verify_setup.py
 ```
 

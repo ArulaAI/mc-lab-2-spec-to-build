@@ -655,18 +655,6 @@ The orchestration plan must record the proposed rollout order and rationale base
 compatibility constraints already established in the specification. Stage 3 records the plan;
 Stage 5 verifies the pair.
 
-### Optional — a planner assist
-
-```
-Using @specs/refund-seam-phase1.spec.md, propose a repository split and
-rollout sequence for only the authorized implementation scope.
-
-Keep Stage 2 open authority items excluded.
-
-Return a planning proposal only. Do not write code or resolve authority gaps.
-```
-
-Use the proposal as input. The final plan and briefs remain yours.
 
 ### Validate the plan
 

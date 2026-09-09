@@ -544,15 +544,28 @@ Environment-specific issues go to the **parking lot** so they do not consume the
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-*The agents you are about to dispatch are only as good as what you write in the next 14 minutes.*
+*The specification tells you what must be true. Now decide how that work should be divided and
+executed across the two repositories.*
 
-**Concept** — planning, briefing, and rollout sequencing
-**You leave with** — an orchestration plan and two agent briefs
+**Concept** — cross-repository planning and bounded agent contracts
+**You leave with** — one orchestration plan and two repository-specific implementation briefs
 
-No agents are dispatched here — that is Stage 4. Your job now is to write the contracts they will
-work from. Deciding who knows what, who does what, and who decides what.
+> **A plan that names tasks but not boundaries is a task list, not an orchestration design.**
 
-### Produce three artifacts
+### Why
+
+Stage 2 carried forward one artifact: [`specs/refund-seam-phase1.spec.md`](specs/refund-seam-phase1.spec.md).
+That specification is the build authority for everything below.
+
+Its open authority items stay open. They are not authorised for implementation, they do not become
+tasks, and no brief may hand one to an agent to decide.
+
+No implementation agents are dispatched here — that is Stage 4. Your job now is to write the
+contracts they will work from.
+
+### Your challenge
+
+Produce three artifacts:
 
 ```
    docs/plans/orchestration-plan.md
@@ -560,92 +573,145 @@ work from. Deciding who knows what, who does what, and who decides what.
    docs/agent-briefs/processor-implementation-brief.md
 ```
 
-Each implementation brief is a contract:
+**The orchestration plan** answers:
 
-| Each contract settles | And also |
-|---|---|
-| Repository | Tools allowed |
-| Objective | **Acceptance criteria owned** |
-| Authoritative context | **NO_DIFF_EXPECTED: true \| false** |
-| Allowed repository scope | Verification required |
-| Excluded areas | Expected return shape |
-| | Stop conditions |
+```
+   which resolved acceptance criteria are in scope
+   which repository is responsible for each
+   which criteria need evidence from both repositories
+   what dependencies exist between the two
+   what rollout order you propose, and why
+   which Stage 2 open authority items remain excluded
+```
 
-Two of those decide what Stage 5 can even do.
+**Each implementation brief** is a contract, and carries only what varies by task:
 
-**Acceptance criteria owned** is the per-repository split. Stage 5 judges each repository against
-*its own* criteria rather than reviewing one combined diff, so a criterion nobody owns is a
-criterion nobody validates. The plan gate enforces it: every criterion owned by at least one
-contract, each contract owning at least one, and no contract inventing a criterion the
-specification does not contain.
+```
+   Repository                     Excluded areas
+   Objective                      NO_DIFF_EXPECTED: true | false
+   Acceptance criteria owned      Verification required
+   Authoritative context          Stop conditions
+   Allowed repository scope
+```
 
-**NO_DIFF_EXPECTED** is a separate statement from owning nothing. A repository can legitimately own
-criteria and expect to change no code — in which case the contract says so, and the job becomes
-proving those criteria are already satisfied. Owning no criteria at all is not the same claim, and
-leaves that repository's validator with nothing to judge.
+**Acceptance criteria owned** is the per-repository assignment, and the label matters: the gate
+and the grader both read that exact heading. Stage 5 judges each repository against its own
+criteria, so a criterion nobody owns is a criterion nobody validates.
 
-**Stop conditions matter far more than they look.** A line like *"if the specification is silent
-on X, stop and report rather than choosing"* is what prevents an agent inventing a business rule
-at minute twenty-two, in a file nobody is watching closely, with complete confidence.
+Tool permissions and the return shape are not in that list on purpose. Both are fixed in the
+`repo-implementer` agent definition, the same for every task. Restating an invariant in a brief is
+how the two drift apart — and the brief is the one the agent obeys.
 
-You may use the planner to propose a decomposition. It does not own the rulings. **Which service
-is authoritative, which contract version you target, and what order things land in are yours.**
+**Every brief carries this stop condition:**
+
+> *If completing the assigned work requires behaviour that the validated specification does not
+> authorise, stop and report it rather than choosing the behaviour.*
+
+That single line is what prevents an agent inventing a business rule at minute twenty-two, in a
+file nobody is watching closely, with complete confidence.
+
+### Planning rules
+
+```
+   1  Plan only the resolved Stage 2 scope.
+   2  Every in-scope acceptance criterion must be assigned.
+   3  Open authority items must not become implementation work.
+   4  Each brief defines both its working boundary and its stop boundary.
+```
+
+Two consequences worth stating plainly:
+
+**A criterion may be assigned to both repositories** when each side has to produce its own local
+evidence for it. That is a legitimate split, not a conflict.
+
+**`NO_DIFF_EXPECTED: true` does not remove the obligation to verify.** A repository can own criteria
+and expect to change no code — the job then becomes proving those criteria are already satisfied,
+with evidence from a verification run. Owning no criteria at all is a different claim, and it leaves
+that repository's Stage 5 validator with nothing to judge.
+
+### Optional — a planner assist
+
+You do not have to use it. If you want a starting decomposition:
+
+```
+Using @specs/refund-seam-phase1.spec.md, propose a repository split and
+rollout sequence for only the authorized implementation scope.
+
+Keep Stage 2 open authority items excluded.
+
+Return a planning proposal only. Do not write code or resolve authority gaps.
+```
+
+The planner proposes. You own the final plan and both briefs — which service is authoritative,
+which contract version you target, and what order things land in are yours.
 
 ### The rollout question
 
-Derive a sequence in which old and new can coexist safely.
+Propose a rollout sequence consistent with the compatibility constraints already established in the
+validated specification. Stage 5 will verify that assumption; Stage 3 does not prove it.
 
-Notice what that question is *not*. It is not "which side matters more". It is "which combinations
-of deployed versions are safe **while the change is in flight**" — and a change can be perfectly
-correct in its final state while being unsafe halfway there.
+The question to answer:
 
-Run:
+> **What has to be true while one side has changed and the other side has not?**
 
-```bash
-bash .claude/scripts/run scripts/run_pair_verification.py --explain
-```
+Notice what that is *not*. It is not "which side matters more". A change can be perfectly correct in
+its final state and still be unsafe halfway there.
+
+If the specification left the contract-version question open, it stays open here. Choosing a version
+to make the plan tidy is resolving an authority gap you were not given.
 
 ### ◆ Predict #3 — reopen Prediction #1
 
 You sealed an answer at the Start step, blind. You now know the seam and the specification.
 
-> **Would you change your answer? What did you not know when you made it?**
+> **Would you keep your original rollout order? What evidence changed or strengthened your
+> reasoning?**
 
 Write the revision next to the original. Keep both — the gap between them is the lesson.
 
-*What you just decided: who changes first, what each agent may touch, and when it must stop.
-Every boundary you drew here is a boundary the agents cannot cross in Stage 4.*
+### Before you run the gate
 
-**⌂ You'll see** — the plan gate reports each check and a verdict. The acceptance-criteria checks
-are the ones that decide whether Stage 5 can do its job:
+Read your two briefs side by side and ask:
 
-```
-  [PASS] both repositories are named in the plan
-  [PASS] rollout order is stated with a rationale
-  [FAIL] every acceptance criterion is owned by a contract   no contract owns: AC-4
-  [PASS] each repository contract owns at least one criterion
-  ...
-  N/M structural checks  ->  DRAFT
-```
+> **If these briefs were handed to two engineers who could not talk to each other, would the
+> resulting work still line up at the service boundary?**
 
-Your wording will differ from your neighbour's; this output will not. It is a script.
-
-### ✓ Done when
+Look specifically for:
 
 ```
-  [ ] /check-plan reports READY
-  [ ] each brief names its repository, its ACs, its excluded areas and its stop conditions
-  [ ] the rollout order is written down WITH the reason it is safe in that order
-  [ ] Prediction #3 sits next to Prediction #1, both still legible
+   [ ] an acceptance criterion nobody was assigned
+   [ ] the same responsibility claimed by both repositories
+   [ ] an open authority item that has quietly become implementation work
+   [ ] scope in one brief that reaches into the other repository
+   [ ] a dependency between the two that neither brief accounts for
 ```
 
-Run:
+### Run the gate
 
 ```
 /check-plan
 ```
 
-Then:
+Read the failures, refine the artifacts, and run it again. For the same plan artifacts,
+`/check-plan` produces the same result — it is a script, not a judgement.
+
+What it establishes is structure: that a decision was made and recorded. It cannot tell you the
+rollout order is *right*, or that ownership landed on the correct service. Those stay yours.
+
+*What you just decided: who changes first, what each agent may touch, and when it must stop. Every
+boundary you drew here is a boundary the agents cannot cross in Stage 4.*
+
+### ✓ Done when
+
+```
+  [ ] /check-plan reports READY
+  [ ] every in-scope acceptance criterion is assigned
+  [ ] Stage 2 open authority items remain outside implementation scope
+  [ ] both briefs define allowed scope, excluded scope, verification, and stop conditions
+  [ ] rollout order is recorded with its rationale
+```
+
+Run:
 
 ```
 /hand-off

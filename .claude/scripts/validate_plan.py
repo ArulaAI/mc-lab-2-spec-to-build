@@ -30,20 +30,25 @@ BRIEFS = {
     "pgs-payment-processor": "docs/agent-briefs/processor-implementation-brief.md",
 }
 
+# What a participant-authored brief must decide. Deliberately excludes anything the
+# repo-implementer agent already fixes for every task: its tool grant is frontmatter, and its
+# return shape is the six headings in its own definition. Restating an invariant in a brief invites
+# the two to drift, and the brief is the one that wins.
+# Each entry is (label, accepted keywords). "Objective" and "Outcome" are the same field under two
+# reasonable names; failing a brief over which one the author picked would be pedantry, not a gate.
 BRIEF_SECTIONS = [
-    "outcome",
+    ("outcome or objective", ["outcome", "objective"]),
     # A contract that does not require the agent to verify its own repository leaves verification
     # to the participant, which is the duplication Stage 4 exists to remove -- and leaves the
-    # Stage 5 brief with no verification evidence to carry.
-    "verification required",
-    "authoritative inputs",
-    "repository scope",
-    "allowed areas",
-    "excluded areas",
-    "tools allowed",
-    "acceptance criteria owned",
-    "expected return shape",
-    "stop conditions",
+    # Stage 5 brief with no verification evidence to carry. The command varies per repository, so
+    # it is the brief's to name.
+    ("verification required", ["verification"]),
+    ("authoritative inputs", ["authoritative"]),
+    ("repository scope", ["repository"]),
+    ("allowed areas", ["allowed"]),
+    ("excluded areas", ["excluded"]),
+    ("acceptance criteria owned", ["acceptance"]),
+    ("stop conditions", ["stop"]),
 ]
 
 # Things the specification places out of scope. A plan that turns one of these into a task has
@@ -89,9 +94,13 @@ def validate(root: pathlib.Path) -> list[Check]:
 
     rollout_words = ["rollout", "roll out", "deploy", "order", "sequence"]
     has_rollout = any(w in low for w in rollout_words)
+    checks.append(Check("rollout order is stated", has_rollout,
+                        "an order is proposed" if has_rollout
+                        else "the plan does not say which side lands first"))
+
     has_reason = has_rollout and ("because" in low or "so that" in low or "reason" in low)
-    checks.append(Check("rollout order is stated with a rationale", has_reason,
-                        "order and reasoning present" if has_reason
+    checks.append(Check("rollout order states its rationale", has_reason,
+                        "reasoning present" if has_reason
                         else "a rollout order without a reason is an assertion, not a plan"))
 
     compat_named = "pair" in low or "compatib" in low
@@ -116,12 +125,21 @@ def validate(root: pathlib.Path) -> list[Check]:
                         "none" if not smuggled
                         else "appears as work rather than as an exclusion: " + ", ".join(smuggled)))
 
+    # Stage 2's open authority items are not authorised for implementation. Checked across the plan
+    # *and* both briefs: a question left open in the plan but handed to an agent in a brief has
+    # still become implementation work, and the brief is what the agent actually executes.
     open_qs = read(root, "specs/refund-seam-phase1.spec.md") or ""
     oq_ids = set(re.findall(r"\bOQ-\d+\b", open_qs))
-    tasked = sorted(q for q in oq_ids if q in plan and
-                    not re.search(re.escape(q) + r"[^.\n]{0,80}(open|unresolved|escalat)", plan,
-                                  re.IGNORECASE))
-    checks.append(Check("unresolved questions did not become tasks", not tasked,
+    tasked = set()
+    for label, doc in [("plan", plan)] + [(repo, read(root, rel) or "")
+                                          for repo, rel in BRIEFS.items()]:
+        for q in oq_ids:
+            if q in doc and not re.search(
+                    re.escape(q) + r"[^.\n]{0,80}(open|unresolved|escalat|not authoris|"
+                                   r"not authoriz|out of scope|excluded)", doc, re.IGNORECASE):
+                tasked.add(f"{q} ({label})")
+    tasked = sorted(tasked)
+    checks.append(Check("open authority items did not become tasks", not tasked,
                         "none" if not tasked
                         else "planned as work rather than left open: " + ", ".join(tasked)))
 
@@ -158,11 +176,18 @@ def validate(root: pathlib.Path) -> list[Check]:
                                    "nothing to judge. Expecting no code change is NO_DIFF_EXPECTED, "
                                    "which is a different statement"))
 
-        undeclared = sorted(r for r, rel in BRIEFS.items()
-                            if "NO_DIFF_EXPECTED" not in (read(root, rel) or ""))
-        checks.append(Check("each contract declares its diff expectation", not undeclared,
-                            "both declare NO_DIFF_EXPECTED" if not undeclared
-                            else "missing NO_DIFF_EXPECTED: " + ", ".join(undeclared)))
+        # Presence is not enough: the field decides whether Stage 4 expects a diff at all, so a
+        # value that is neither true nor false leaves that undecided while looking answered.
+        bad_decl = []
+        for r, rel in BRIEFS.items():
+            text = read(root, rel) or ""
+            if "NO_DIFF_EXPECTED" not in text:
+                bad_decl.append(f"{r} (missing)")
+            elif not re.search(r"NO_DIFF_EXPECTED\s*:\s*(true|false)\b", text, re.IGNORECASE):
+                bad_decl.append(f"{r} (not true or false)")
+        checks.append(Check("each contract declares a valid diff expectation", not bad_decl,
+                            "both declare NO_DIFF_EXPECTED: true|false" if not bad_decl
+                            else "NO_DIFF_EXPECTED " + ", ".join(bad_decl)))
 
     for repo, rel in BRIEFS.items():
         brief = read(root, rel)
@@ -170,16 +195,22 @@ def validate(root: pathlib.Path) -> list[Check]:
             checks.append(Check(f"agent brief: {repo}", False, f"{rel} not found"))
             continue
         blow = brief.lower()
-        missing = [s for s in BRIEF_SECTIONS if s.split()[0] not in blow]
+        missing = [label for label, words in BRIEF_SECTIONS
+                   if not any(w in blow for w in words)]
         checks.append(Check(f"agent brief: {repo}", not missing,
                             "all required sections present" if not missing
                             else "missing: " + ", ".join(missing)))
 
-        has_tools = "tools" in blow
+        # The working boundary and the stop boundary. The tool grant is not checked here: it is
+        # fixed in the repo-implementer definition, not chosen per task.
+        has_allowed = "allowed" in blow
+        has_excluded = "excluded" in blow
         has_stop = "stop" in blow
-        checks.append(Check(f"boundaries stated: {repo}", has_tools and has_stop,
-                            "tool permissions and stop conditions present" if has_tools and has_stop
-                            else "an agent without tool limits or stop conditions is unbounded"))
+        bounded = has_allowed and has_excluded and has_stop
+        checks.append(Check(f"boundaries stated: {repo}", bounded,
+                            "allowed scope, excluded scope and stop conditions present" if bounded
+                            else "an agent contract without both a working boundary and a stop "
+                                 "boundary is unbounded"))
 
     return checks
 
@@ -201,7 +232,7 @@ def write_status(root: pathlib.Path, checks: list[Check]) -> dict:
 
 
 def self_test() -> int:
-    """An empty plan must fail and a complete one must pass, or the gate is decorative."""
+    """Every rule the gate claims to enforce gets a case that fails without it."""
     import tempfile
 
     results = []
@@ -213,14 +244,9 @@ def self_test() -> int:
         results.append(("an empty plan is refused", not all(c.passed for c in checks),
                         f"{sum(1 for c in checks if not c.passed)} failing check(s)"))
 
-    with tempfile.TemporaryDirectory() as tmp:
-        root = pathlib.Path(tmp)
-        (root / "docs/plans").mkdir(parents=True)
-        (root / "docs/agent-briefs").mkdir(parents=True)
-        (root / "specs").mkdir(parents=True)
-        (root / "specs/refund-seam-phase1.spec.md").write_text(
-            "| OQ-1 | derivation | Open |\nAC-1 AC-2 AC-3 AC-4 AC-5\n")
-        (root / "docs/plans/orchestration-plan.md").write_text("""# Orchestration plan
+    # ---- one scaffold, mutated per case -------------------------------------------------------
+    SPEC = "| OQ-1 | derivation | Open |\nAC-1 AC-2 AC-3 AC-4 AC-5\n"
+    PLAN = """# Orchestration plan
 
 Work is split across pgs-tta and pgs-payment-processor.
 
@@ -232,50 +258,83 @@ consumer working, so the two can coexist while the change is in flight.
 Compatibility is demonstrated by the pair verification harness.
 
 Void flows and settlement generation are out of scope and are not work in this plan.
-OQ-1 remains open and is escalated, not answered.
-""")
-        for rel in BRIEFS.values():
-            (root / rel).write_text("""# Brief
+OQ-1 remains open and is not authorised for implementation.
+"""
+    BRIEF = """# Brief
 
 ## Outcome
 ## Authoritative inputs
 ## Repository scope
 ## Allowed areas
 ## Excluded areas
-## Tools allowed
 ## Acceptance criteria owned
-AC-1 AC-2 AC-3 AC-4 AC-5
-NO_DIFF_EXPECTED: false
+{acs}
+NO_DIFF_EXPECTED: {nodiff}
 ## Verification required
 run the repository's full Maven verification before returning
 ## Dependencies on the other repository
-## Expected return shape
 ## Stop conditions
-Stop and report if the specification is silent.
-""")
-        checks = validate(root)
-        failing = [c.name for c in checks if not c.passed]
-        results.append(("a complete plan is accepted", not failing,
-                        "all checks pass" if not failing else "failing: " + "; ".join(failing)))
+{stop}
+"""
 
-    with tempfile.TemporaryDirectory() as tmp:
+    def build(plan=PLAN, spec=SPEC, tta=None, proc=None):
+        tmp = tempfile.mkdtemp()
         root = pathlib.Path(tmp)
-        (root / "docs/plans").mkdir(parents=True); (root / "docs/agent-briefs").mkdir(parents=True)
+        (root / "docs/plans").mkdir(parents=True)
+        (root / "docs/agent-briefs").mkdir(parents=True)
         (root / "specs").mkdir(parents=True)
-        (root / "specs/refund-seam-phase1.spec.md").write_text("AC-1 AC-2 AC-3\n")
-        (root / "docs/plans/orchestration-plan.md").write_text(
-            "pgs-tta and pgs-payment-processor. AC-1 AC-2 AC-3. Rollout order: producer, because "
-            "additive. Pair verification demonstrates compatibility.\n")
-        for rel in BRIEFS.values():
-            (root / rel).write_text("## Outcome\n## Authoritative inputs\n## Repository scope\n"
-                                    "## Allowed areas\n## Excluded areas\n## Tools allowed\n"
-                                    "## Acceptance criteria owned\nAC-1\nNO_DIFF_EXPECTED: false\n"
-                                    "## Verification required\nmvn verify\n"
-                                    "## Expected return shape\n## Stop conditions\nStop.\n")
-        names = [c.name for c in validate(root) if not c.passed]
-        results.append(("an uncovered acceptance criterion is refused",
-                        "every acceptance criterion is owned by a contract" in names,
-                        f"AC-2/AC-3 unowned -> {len(names)} failing check(s)"))
+        (root / "specs/refund-seam-phase1.spec.md").write_text(spec)
+        (root / "docs/plans/orchestration-plan.md").write_text(plan)
+        default = dict(acs="AC-1 AC-2 AC-3 AC-4 AC-5", nodiff="false",
+                       stop="Stop and report if the specification is silent.")
+        (root / BRIEFS["pgs-tta"]).write_text(BRIEF.format(**{**default, **(tta or {})}))
+        (root / BRIEFS["pgs-payment-processor"]).write_text(
+            BRIEF.format(**{**default, **(proc or {})}))
+        return root
+
+    def failing(root):
+        return [c.name for c in validate(root) if not c.passed]
+
+    def case(label, root, expect_check=None):
+        names = failing(root)
+        if expect_check is None:
+            results.append((label, not names, "all checks pass" if not names
+                            else "failing: " + "; ".join(names)))
+        else:
+            results.append((label, expect_check in names,
+                            "refused" if expect_check in names else f"NOT refused ({names})"))
+
+    # a valid plan, with the same AC owned by both repositories -- legitimate when each side must
+    # provide its own local evidence for the criterion
+    case("a valid plan reaches READY, cross-repository AC assignment accepted", build())
+
+    case("an unassigned acceptance criterion is refused",
+         build(tta={"acs": "AC-1"}, proc={"acs": "AC-2"}),
+         "every acceptance criterion is owned by a contract")
+
+    case("an invented acceptance criterion is refused",
+         build(tta={"acs": "AC-1 AC-2 AC-3 AC-4 AC-5 AC-9"}),
+         "no contract references an unknown criterion")
+
+    case("an open authority item assigned for implementation is refused",
+         build(tta={"acs": "AC-1 AC-2 AC-3 AC-4 AC-5\nImplement OQ-1 in this repository."}),
+         "open authority items did not become tasks")
+
+    no_stop = build()
+    brief = no_stop / BRIEFS["pgs-tta"]
+    text = brief.read_text(encoding="utf-8")
+    brief.write_text(text.split("## Stop conditions")[0], encoding="utf-8")
+    case("missing stop conditions is refused", no_stop, "agent brief: pgs-tta")
+
+    case("a rollout order with no rationale is refused",
+         build(plan=PLAN.replace(
+             "Rollout order: the producer change lands first, because the additive contract keeps "
+             "the previous\nconsumer working, so the two can coexist while the change is in "
+             "flight.", "Rollout order: the producer change lands first.")),
+         "rollout order states its rationale")
+
+    case("a non-boolean NO_DIFF_EXPECTED is refused",
+         build(tta={"nodiff": "maybe"}), "each contract declares a valid diff expectation")
 
     ok = True
     for label, passed, detail in results:

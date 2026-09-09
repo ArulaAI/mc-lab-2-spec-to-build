@@ -54,6 +54,14 @@ between them — where no single agent, and no single test suite, is looking.
 You are not here to fix bugs. You are here to **establish what is true across a boundary where
 neither witness can see the whole picture** — and then to direct AI safely inside that picture.
 
+### The three goals of this lab
+
+| Goal | Across the lab |
+|---|---|
+| **Build shared intuition** | Develop a common engineering instinct for reasoning across repository, service, and agent boundaries. |
+| **Standardize shared language** | Give recurring engineering situations a shared vocabulary so teams describe and reason about them consistently. |
+| **Change engineering behavior** | Move from asking AI to solve a change end-to-end toward establishing evidence, defining boundaries, executing inside them, and verifying independently. |
+
 By minute 120 you will have:
 
 ```
@@ -179,6 +187,12 @@ Before an agent does anything, two questions have to be settled: what is it allo
 when two documents disagree, which one wins? Skip these and every later decision inherits the
 ambiguity.
 
+| Engineering lens | This stage establishes |
+|---|---|
+| **Build Intuition** | Establish authority and boundaries before asking AI to act. If authority is unclear, every downstream decision inherits that ambiguity. |
+| **Standardize Language** | Use `context boundary`, `source authority`, `non-negotiable`, and `out of scope` consistently to distinguish what an agent may know, what governs the decision, and what it is not authorised to change. |
+| **Behavior Change** | Before delegating work, explicitly establish what the agent may see, what it may change, and which source has authority when evidence conflicts. |
+
 ### 1 · Start the lab
 
 Run:
@@ -274,6 +288,12 @@ boundary.*
 **You leave with** — two independent repository audits reconciled into one context ledger
 
 > **Agents investigate locally. You reconcile across the service boundary.**
+
+| Engineering lens | This stage establishes |
+|---|---|
+| **Build Intuition** | Local correctness does not establish correctness at a service boundary. Cross-repository conclusions require evidence from both sides. |
+| **Standardize Language** | Use `scoped sub-agent`, `repository evidence`, `service boundary`, `context ledger`, and `UNKNOWN` consistently to distinguish local findings from cross-repository conclusions that have or have not been established. |
+| **Behavior Change** | Investigate each repository in a bounded context, then reconcile the evidence across the boundary rather than asking one agent to infer the whole system. |
 
 ### Why
 
@@ -372,6 +392,12 @@ kept explicit
 
 > **A specification that says "we do not know this yet, and we are not building it" is more
 > finished than one that guessed.**
+
+| Engineering lens | This stage establishes |
+|---|---|
+| **Build Intuition** | A buildable specification separates what is known from what still requires authority. Unknown does not mean permission to choose. |
+| **Standardize Language** | Use `acceptance criterion`, `observable`, `testable`, `open authority item`, `authorized scope`, and `READY_FOR_BOUNDED_BUILD` consistently to distinguish requirements that are ready to implement from decisions that remain unresolved. |
+| **Behavior Change** | Convert evidence-backed decisions into observable, testable requirements. Keep unresolved authority explicit and outside implementation rather than allowing the model to fill the gap. |
 
 ### Why
 
@@ -551,6 +577,12 @@ Environment-specific issues go to the **parking lot** so they do not consume the
 
 > **Plan only the scope authorised in Stage 2. Open authority items remain outside implementation.**
 
+| Engineering lens | This stage establishes |
+|---|---|
+| **Build Intuition** | Cross-repository planning is not task decomposition alone. It must preserve responsibility, boundaries, dependencies, verification, and rollout constraints before implementation begins. |
+| **Standardize Language** | Use `orchestration plan`, `implementation brief`, `acceptance criteria owned`, `working boundary`, `stop condition`, `NO_DIFF_EXPECTED`, and `rollout order` consistently to describe who is responsible for what, where an agent may act, and when it must stop. |
+| **Behavior Change** | Turn the authorised specification into bounded repository-specific contracts before implementation begins. Do not turn an open authority item into an agent task. |
+
 ### What you carry forward
 
 [`specs/refund-seam-phase1.spec.md`](specs/refund-seam-phase1.spec.md)
@@ -686,6 +718,12 @@ Run:
 > AI generates inside **tests, rules, gates, tool permissions and contract checks** — not inside a
 > conversation.
 
+| Engineering lens | This stage establishes |
+|---|---|
+| **Build Intuition** | Agent autonomy is useful only inside explicit scope and verification boundaries. The contract defines the authorised outcome and constraints; the agent determines the implementation. |
+| **Standardize Language** | Use `bounded execution`, `repo-implementer`, `verification evidence`, `FILES_CHANGED`, and `STOP_REQUIRED` consistently to distinguish authorised execution, observed results, and conditions where the agent must stop rather than improvise. |
+| **Behavior Change** | Dispatch one bounded implementation context per repository and judge the return against its contract and verification evidence, not against how convincing the agent sounds. |
+
 ### What each agent receives — and what it does not
 
 ```
@@ -809,6 +847,12 @@ Run:
 If Stage 4 runs long, the facilitator will apply a checkpoint and move the room here anyway.
 Arriving with part of the work done and seeing what independent judgment catches is a far
 better session than finishing the code and never finding out. Nobody is counting your fixes.
+
+| Engineering lens | This stage establishes |
+|---|---|
+| **Build Intuition** | Two green repositories do not prove that the service boundary is correct. Repository verification and independent judgment answer different questions. |
+| **Standardize Language** | Use `pair verification`, `fresh context`, `independent validator`, `PASS`, `FAIL`, `UNVERIFIED`, and `finding disposition` consistently to distinguish deterministic seam evidence from independent engineering judgment. |
+| **Behavior Change** | Separate creation from judgment: verify the pair independently, then use fresh validators and disposition every finding rather than trusting the implementation context or individual green builds alone. |
 
 ### ◆ Predict #4 — what did you miss?
 
@@ -951,6 +995,12 @@ Run:
 *You made a prediction blind, revised it informed, and now have evidence. How wrong were you?*
 
 **Concept** — context handoff, evidence, and the learning loop
+
+| Engineering lens | This stage establishes |
+|---|---|
+| **Build Intuition** | The reusable asset is the evidence-backed workflow, not the prompt or model conversation that produced one implementation. |
+| **Standardize Language** | Use `handoff`, `evidence trail`, `workflow tracker`, `open item`, and `reusable practice` consistently to describe what must survive beyond the current agent session. |
+| **Behavior Change** | Preserve decisions, evidence, verification results, and unresolved items so the next engineer or agent can continue from an explicit handoff instead of reconstructing reasoning from conversation history. |
 
 ### 1 · Reopen Prediction #1
 

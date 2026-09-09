@@ -363,23 +363,22 @@ Run:
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-*The current specification is not yet ready to build from. Your job is to make it precise without
-inventing missing behavior.*
+*Some of what you found in Stage 1 the available authority can settle. Some of it it cannot. Both
+belong in the specification, stated differently.*
 
 **Concept** — spec-as-context and readiness gates
-**You leave with** — a specification an implementation agent can work from without guessing
+**You leave with** — a build-ready specification for the resolved scope, with unresolved authority
+kept explicit
 
-> **If the specification is vague, the implementation agent must either stop or make an unsupported
-> assumption.**
+> **A specification that says "we do not know this yet, and we are not building it" is more
+> finished than one that guessed.**
 
 ### Why
 
-Stage 1 established what the two repositories currently say about the service boundary.
+Stage 1 established the evidence across TTA and Payment Processor.
 
-Stage 2 turns that evidence into a clear specification for the work ahead.
-
-You will use a deterministic readiness gate to identify structural gaps, improve the specification
-using only the authority available in the lab, and keep anything unsupported explicitly unresolved.
+Stage 2 turns the resolved evidence into explicit, observable, testable requirements. Items the
+available authority cannot resolve remain open and are not authorised for implementation.
 
 ### Step 1 · Check the specification
 
@@ -389,96 +388,74 @@ Run:
 /check-spec
 ```
 
-`/check-spec` evaluates the specification against the structural readiness rules in
-[`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md). It checks things such as:
+The gate scores ten structural readiness checks against the rules in
+[`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md). It checks structure — sections,
+identifiers, observable outcomes, testable constraints, and whether what remains unknown is
+recorded rather than quietly answered.
 
-- required sections are present;
-- acceptance criteria have identifiers;
-- acceptance criteria describe observable outcomes;
-- required ownership information is present; and
-- required decision areas are represented.
+It does not decide domain correctness. A well-formed requirement can still be wrong.
 
-It does not decide whether the specification is semantically correct.
+The failing checks are your editing queue.
 
-**⌂ You'll see** — a structural verdict showing which checks need attention:
+**⌂ You'll see** — a verdict, and separately, any authority the material does not settle:
 
 ```
-[PASS] ...
-[FAIL] ...
-[FAIL] ...
-...
-N/12 structural checks  ->  DRAFT
+  [PASS] required sections present                     all present
+  [FAIL] acceptance criteria describe observable ...   unobservable phrasing: handled correctly
+  [FAIL] idempotency is testable for the authorised    does not state: what carries the retry
+         scope                                         identity; ...
+  ...
+
+  5/10 structural readiness checks  ->  DRAFT
 ```
 
-Use the failing checks as your editing queue.
-
-Because `/check-spec` is deterministic, the same specification produces the same structural result.
-This is different from model-generated output, where wording and reasoning paths may vary.
-
-### The facilitator demonstrates · Make one requirement buildable
-
-Consider:
-
-```
-✗ WEAK
-
-"Handle duplicate refunds correctly."
-```
-
-Now compare it with:
-
-```
-✓ BUILDABLE
-
-"When Payment Processor identifies a duplicate logical refund, the TTA
-boundary preserves the duplicate-conflict semantics, and the downstream
-repository contains no second refund record."
-```
-
-The second version gives us something observable. It tells us:
-
-- what condition triggers the behavior;
-- what the caller should observe; and
-- what must be true of the resulting state.
-
-The first version leaves the meaning of "correctly" for the implementation agent to decide.
+Because the gate is deterministic, the same specification produces the same result. Model-generated
+output varies; this does not.
 
 ### Step 2 · Harden the specification
-
-Use the gate failures to improve
-[`specs/refund-seam-phase1.spec.md`](specs/refund-seam-phase1.spec.md).
 
 Run:
 
 ```
-Using the /check-spec failures, improve
-@specs/refund-seam-phase1.spec.md.
+Using @docs/context-ledger.md, the spec's source authority, and the latest
+/check-spec failures, harden @specs/refund-seam-phase1.spec.md.
 
-Use only the supplied authority for substantive decisions.
-Do not resolve an open question without supporting evidence.
-If it cannot be resolved, keep it explicitly open.
+Make only resolved, evidence-backed requirements observable and testable.
+Resolve conflicts only with authority; keep unresolved items open and out of
+implementation scope.
 
-Re-run /check-spec after the changes.
+Update only the specification.
 ```
 
-The failing gate checks tell you what structure needs attention. The available authority determines
-what you are allowed to add.
+The decision rule, for every item:
 
-### Three rules while you work
+```
+   Supported and resolved  ->  make it buildable
+   Conflicting evidence    ->  resolve only with authority
+   Unresolved              ->  keep it open
+```
 
-**1 · Do not turn an open question into an assumption.**
-For every open question, ask: *can I point to supplied authority that actually answers this?* If
-yes, use that evidence. If no, keep the question open. A reasonable-sounding answer is not
-authority.
+An unresolved item costs you nothing at the gate, provided it stays recorded and outside the
+implementation boundary. Inventing an owner or a derivation to turn a check green is the one move
+this stage exists to prevent.
 
-**2 · Do not change the rules to make the specification pass.**
-Do not weaken scope, non-negotiables, or other governing authority simply to satisfy the readiness
-gate. The objective is to improve the specification within the established boundary, not redefine
-the boundary until the checks become green.
+**Optional — evaluate a requirement of your own**
 
-**3 · Every substantive addition needs a source.**
-Anything you add about payment behavior must be supported by the available authority established
-for the lab. Do not create new behavior because it seems technically sensible.
+If you want to add a requirement or constraint, test it against the authority first, in its own
+turn:
+
+```
+Evaluate this requirement or constraint against @docs/context-ledger.md
+and the source authority in @specs/refund-seam-phase1.spec.md:
+
+"<add your requirement or constraint>"
+
+If supported, add it as an observable, testable requirement.
+If the available authority does not support it, leave the specification
+unchanged and explain what is missing.
+
+Update only @specs/refund-seam-phase1.spec.md.
+```
 
 ### Step 3 · Re-run the readiness gate
 
@@ -488,55 +465,61 @@ Run:
 /check-spec
 ```
 
-Continue addressing the structural failures until the specification reports:
+Target:
 
 ```
-12/12 structural checks  ->  READY
+  10/10 structural readiness checks  ->  READY_FOR_BOUNDED_BUILD
+
+  OPEN AUTHORITY ITEMS
+  - ownership undecided: Retry identity stability (OQ-3)
+
+  These items are not authorised for implementation.
 ```
 
-`READY` means the specification satisfies the structural completeness bar. It does not mean a
-machine has decided that every business or payment decision is correct.
+Open authority items do not reduce the score. They are reported so the boundary stays visible —
+what is being built, and what is explicitly not. If items remain open, that is a finished outcome,
+not an incomplete one.
+
+`READY_FOR_BOUNDED_BUILD` means the resolved scope is well-formed enough to build against. It does
+not mean a machine decided the payment behaviour is correct.
 
 > **The gate validates structure. Engineers validate meaning.**
 
 ### Review the specification
 
-Once `/check-spec` reports `READY`, review the specification before moving on.
+Before moving on, confirm:
 
-Ask:
+```
+  [ ] every requirement being implemented is evidence-backed
+  [ ] acceptance criteria are observable and testable
+  [ ] unresolved authority items remain explicit
+  [ ] unresolved items are outside the implementation scope
+  [ ] you know whether each acceptance criterion needs evidence from TTA,
+      Payment Processor, or both
+```
 
-> Did we add anything that we cannot trace to available authority?
-
-Then review the acceptance criteria and ask:
-
-> What evidence will be required to prove each criterion: TTA, Payment Processor, or both?
-
-You will use that distinction in Stage 3 when the work is divided into repository-specific agent
-contracts.
-
-If a question still lacks authority, leave it open. Do not resolve it simply because the structural
-gate is green.
+That last one is what Stage 3 divides into repository-specific agent contracts, so it is worth
+answering now rather than discovering it there.
 
 ### ◆ Reveal
 
-Compare the specification you started with against the version that now reports `READY`.
+Compare the specification you started with against the version that now reports
+`READY_FOR_BOUNDED_BUILD`.
 
-Where was the original wording forcing an implementation agent to make a decision that the
-specification had not actually made?
+Where was the original wording forcing an implementation agent to make a decision the specification
+had not actually made?
 
 That gap is the reason for treating the specification as part of the agent's working context rather
 than as documentation written after implementation.
 
 ### ✓ Done when
 
-Stage 2 is complete when:
-
 ```
-  [ ] /check-spec reports READY
-  [ ] acceptance criteria describe observable, testable outcomes
-  [ ] every resolved question is supported by available authority
-  [ ] unresolved questions remain explicitly open
-  [ ] no unsupported payment behavior was added to make the gate pass
+  [ ] /check-spec reports 10/10 READY_FOR_BOUNDED_BUILD
+  [ ] resolved requirements are explicit, observable, and testable
+  [ ] resolved requirements trace to available authority
+  [ ] unresolved authority items remain explicitly open
+  [ ] unresolved items are excluded from implementation scope
 ```
 
 Run:

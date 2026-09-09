@@ -43,18 +43,20 @@ gates:
     changes_next: "settled items become ledger rows with evidence; the rest stay UNKNOWN and are carried into the specification's open questions"
     on_missing_authority: STOP_REQUIRED
 
-  - id: DG-03
-    stage: 2
-    question: "For each open question the specification carries, does the supplied source material answer it? Name the source you checked, and say what you are recording."
-    response: free_text
-    evidence_required: "the specification's Open questions section has been read alongside docs/PGS_DECISIONS.md"
-    changes_next: "an answered question is closed with a citation; an unanswered one stays open and is not filled in"
-    on_missing_authority: STOP_REQUIRED
-
-  - id: DG-04
-    stage: 2
-    question: "Which acceptance criteria need evidence from both repositories, and which belong to exactly one?"
-    response: free_text
-    evidence_required: "the specification reports READY, so the acceptance criteria are stable"
-    changes_next: "this assignment becomes the Acceptance criteria owned field in each Stage 3 agent contract, and the per-repository input to Stage 5's validators"
-    on_missing_authority: STOP_REQUIRED
+# Stage 2 has no decision gates.
+#
+# It previously carried two (DG-03, whether the source material answers each open question, and
+# DG-04, which acceptance criteria need evidence from which repository). Both were removed when
+# Stage 2 moved to the bounded-build readiness model, because neither was a question Claude should
+# be putting to the participant:
+#
+#   - the first is now enforced deterministically. validate_spec.py reports an unresolved item as
+#     an OPEN AUTHORITY ITEM rather than asking anyone to close it, and fails the gate only when an
+#     acceptance criterion depends on one. Asking the question invited exactly the invented answer
+#     the check exists to prevent.
+#   - the second is a review step the participant performs against their own specification, and it
+#     survives as the last line of Stage 2's review checklist. It still feeds the Acceptance
+#     criteria owned field in each Stage 3 agent contract; it simply is not asked as a gate.
+#
+# Removing them here keeps this file and LAB_ACTION_GUIDE.md saying the same thing. A gate listed
+# but never asked is the drift this file exists to prevent.

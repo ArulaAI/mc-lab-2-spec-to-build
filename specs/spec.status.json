@@ -1,8 +1,10 @@
 {
   "valid": false,
   "status": "DRAFT",
-  "structural_checks": 12,
-  "structural_checks_passed": 6,
+  "readiness": "DRAFT",
+  "structural_checks": 10,
+  "structural_checks_passed": 5,
+  "open_authority_items": [],
   "semantic_authority": "human-reviewed",
-  "note": "Structural readiness only. This gate cannot determine whether the specification is correct about the domain, and does not attempt to."
+  "note": "Structural readiness for the resolved scope only. This gate cannot determine whether the specification is correct about the domain, and does not attempt to. Open authority items are recorded, not authorised for implementation."
 }

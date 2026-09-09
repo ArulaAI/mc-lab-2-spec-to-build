@@ -1,154 +1,57 @@
 # Lab 2 — One Refund Across a Service Boundary
 
-A 120-minute hands-on lab on using AI safely when a money-moving change spans more than one
-repository, and the decisions that matter live at the seam between them.
-
-Lab 1 taught governing one AI-assisted change inside one repository. This lab is about
-orchestrating several scoped AI contexts across a service boundary while the engineer keeps
-authority over the seam.
-
-**Participants start with [`LAB_ACTION_GUIDE.md`](LAB_ACTION_GUIDE.md).** This file covers
-architecture and setup.
+A 120-minute hands-on lab about governing AI safely when a money-moving change crosses a service boundary — where no single test suite, and no single agent, can see the whole picture. To understand the scenario you are working on, start with [`docs/SCENARIO_GROUNDING.md`](docs/SCENARIO_GROUNDING.md).
 
 ---
 
-## The problem
+## Follow the Lab Action Guide
 
-A merchant refund crosses the **TTA → Payment Processor** boundary. Two repositories. Both build.
-Both have passing tests. Neither is obviously broken.
-
-They still do not agree with each other.
-
-```
-WSAPI  ->  TTA  ->  Payment Processor  ->  CPC  ->  Injection  ->  LCS API  ->  DCF
-           |________________________|
-                represented here          not implemented in this lab
-```
-
-Correctness across a service boundary lives in the relationship between two implementations, not
-inside either one — which is why the central fact of the lab is:
-
-> **Repo A green + Repo B green ≠ pair correct.**
+Everything you need — all six stages and how to work through each one — is in the **[LAB_ACTION_GUIDE](LAB_ACTION_GUIDE.md)**. That is the document you will be working from, start to finish.
 
 ---
 
-## Prerequisites
+## Before the session
 
-- **JDK 17 or newer.** A 21 JDK compiling to the Java 17 target is the documented PGS pattern and
-  is what this lab is built and tested against.
+Do this *before* session day. It takes a few minutes and will save you a lot of pain at minute forty.
+
+### What you'll need
+
+- **JDK 17+** — JDK 21 targeting Java 17 is the documented pattern and what this lab is tested against
 - **Maven 3.9+**
-- **Python 3.9+**, with PyYAML for the grader
-  (`bash .claude/scripts/run -m pip install pyyaml`)
+- **Python 3.9+** with PyYAML (`bash .claude/scripts/run -m pip install pyyaml`)
 - **Git**
-- The `workbench` plugin, for `/lab`, `/journey`, `/hand-off`, the planner and the
-  `code-to-spec-validator`
-- A warm `~/.m2`. The lab makes no network calls at runtime, but a first Maven build on a cold
-  cache resolves dependencies like any other.
-- **A bash-compatible shell.** All terminal commands in this lab assume bash (Git Bash on
-  Windows). Every helper is invoked through one wrapper, `bash .claude/scripts/run <script>`,
-  which resolves the interpreter for you — `py -3` on a Windows box where `python3` is absent
-  or a Store stub, `python3` elsewhere — reusing the same project-local cache the Workbench
-  plugin writes. That is why the guide prints one command rather than one per platform.
+- The **Workbench plugin** — needed for `/lab`, `/journey`, `/hand-off`, and the validators
+- A warm `~/.m2` — the lab makes no network calls at runtime, but a cold Maven cache will take a few minutes on first build
+- A **bash-compatible shell** — all commands go through one wrapper (`bash .claude/scripts/run <script>`), so you don't need to think about platform differences
 
-## Setup — before session day, not during it
+### Set it up
 
-```bash
+```
 bash .claude/scripts/run scripts/verify_setup.py
 ```
 
-This checks the toolchain, initialises the two service directories (`pgs-tta/` and
-`pgs-payment-processor/`, already at the repository root) as Git repositories with one committed
-starter commit, warms the Maven cache, and confirms the starting state. It must end with **"Setup
-complete"**.
-
-`--check` verifies without changing anything. `--reset` is destructive: it restores both service
-directories to their pristine state and asks for confirmation naming exactly what it will discard.
+This checks your toolchain, initialises both service repositories, warms the Maven cache, and confirms you are ready to go. It must end with **"Setup complete"**. If it doesn't, read the first `[FAIL]` line — it names exactly what is missing.
 
 ---
 
-## Layout
+## Reference map
 
-```
-pgs-tta/        the TTA service — your working copy
-pgs-payment-processor/   the Payment Processor service — your working copy
-specs/          the specification, plus the write-protected authority documents
-docs/           pre-read, term card, outcomes, grounding, decisions, ledger, tracker
-lab-harness/    pair-verification harness -- readable, not writable
-.claude/        lab config, write gate, auditor agent, validators, rubric, grader
-scripts/        setup and pair verification
-```
+When you need to look something up mid-lab, here is where to find it.
 
-After `verify_setup.py` runs, `pgs-tta/` and `pgs-payment-processor/` become independent Git
-repositories (each with their own `.git/` directory and a single starter commit).
-
-## The six stages
-
-| # | Stage | Focus | Min |
-|---|---|---|---|
-| — | *Start — Ground the Work* | *Frame the Boundary* | 6 |
-| 1 | Audit Context | Map the Seam | 17 |
-| 2 | Author & Validate the Spec | Make the Spec Buildable | 16 |
-| — | *Scheduled Q&A pause* | *Questions land here, not mid-stage* | 4 |
-| 3 | Plan Across Repositories | Plan and Brief | 16 |
-| 4 | Build & Validate | Build the Bounded Slice | 25 |
-| 5 | Validate the Pair | Prove the Pair | 20 |
-| — | *Scheduled Q&A pause* | *Questions land here, not mid-stage* | 4 |
-| 6 | Review, Handoff & Close | Transfer the Learning | 6 |
-
-This totals **114 of the 120 minutes**, the two Q&A pauses included, leaving six minutes of float.
-Grounding is a Start step rather than a numbered stage: the lab has **six numbered stages**.
-Stage 5 is the anchor and is never cut; when something overruns, the trade comes out of Stage 4.
+| Document | What it answers |
+|---|---|
+| [`LAB_ACTION_GUIDE.md`](LAB_ACTION_GUIDE.md) | How to run the lab, stage by stage |
+| [`docs/ESSENTIAL_OUTCOMES.md`](docs/ESSENTIAL_OUTCOMES.md) | What gets graded |
+| [`docs/SCENARIO_GROUNDING.md`](docs/SCENARIO_GROUNDING.md) | Real PGS behaviour vs. lab simplification vs. planted defect |
+| [`docs/PGS_DECISIONS.md`](docs/PGS_DECISIONS.md) | Every decision and its source layer |
+| [`docs/TERM_CARD.md`](docs/TERM_CARD.md) | The ten key terms, defined |
+| [`docs/SPEC_COMPLETENESS_BAR.md`](docs/SPEC_COMPLETENESS_BAR.md) | When a spec is build-ready |
+| [`specs/NON_NEGOTIABLES.md`](specs/NON_NEGOTIABLES.md) | What holds regardless of anything else |
+| [`specs/OUT_OF_SCOPE.md`](specs/OUT_OF_SCOPE.md) | What must not be built |
+| [`docs/CHALLENGE.md`](docs/CHALLENGE.md) | Bonus: break the write gate |
 
 ---
 
-## Commands
+Questions? Reach out to your facilitator.
 
-```bash
-bash .claude/scripts/run scripts/verify_setup.py             # set up and verify the workspace
-bash .claude/scripts/run scripts/run_pair_verification.py    # prove the seam
-bash .claude/scripts/run scripts/run_pair_verification.py --explain   # what the compatibility matrix asks
-
-bash .claude/scripts/run .claude/scripts/validate_spec.py    # Stage 2 readiness gate
-bash .claude/scripts/run .claude/scripts/validate_plan.py    # Stage 3 plan gate
-bash .claude/scripts/run .claude/scripts/build_validator_brief.py     # Stage 5 brief, assembled deterministically
-bash .claude/scripts/run .claude/scripts/grade_repo.py       # deterministic grading
-```
-
-## Architecture notes
-
-**The write gate.** `.claude/hooks/gate_guard.py` blocks writes to the harness, the out-of-scope
-and non-negotiables documents, the outcomes card and the facilitator package. Reading them is
-expected. A lab whose grading harness can be edited by the thing being graded is not measuring
-anything. Run `--self-test` to confirm all four bypass classes are still covered.
-
-**The generated client.** `pgs-tta/src/main/java/.../client/contract/` is generated from the
-contract that service is pinned to:
-
-```bash
-cd pgs-tta && mvn -Pgenerate-client generate-sources
-```
-
-Generation runs at construction and remediation time only, never during an ordinary build, so the
-lab needs no network. The same contract and configuration reproduce the committed output exactly —
-regenerate rather than hand-editing.
-
-**Determinism.** `grade_repo.py` produces the same score for the same workspace state every time.
-Nothing samples, calls a model, or depends on the clock. Two people who reach the same outcome by
-different routes score identically.
-
-**A limitation, stated rather than papered over.** A journey event records that a tool ran, not what
-it returned, so no rubric check can prove a build went green from the journey alone. Build outcomes
-are graded from recorded results and repository state, and the facilitator's live spot-check covers
-the rest.
-
-## Grounding
-
-`docs/SCENARIO_GROUNDING.md` separates grounded PGS behaviour from lab simplification from
-deliberately seeded defect, and `docs/PGS_DECISIONS.md` records every decision with its source and
-layer.
-
-Seeded defects are teaching fixtures. **Their presence does not imply the same defect exists, or
-ever existed, in a Mastercard production system.**
-
-The lab proves the represented seam locally. It does not claim the wider PGS refund capability is
-production-ready, and pair verification does not replace integration testing or release governance.
+Happy coding!
